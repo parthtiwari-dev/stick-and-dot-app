@@ -8,41 +8,47 @@ import {
   FilePlus,
   Settings,
   FolderOpen,
-  Compass, 
+  Compass,
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard",    href: "/dashboard",  icon: Home },
-  { label: "Explore",      href: "/explore",    icon: Compass },
-  { label: "Resources",    href: "/resources",  icon: Box },
-  { label: "Create",       href: "/create",     icon: FilePlus },
-  { label: "Settings",     href: "/settings",   icon: Settings },
-  { label: "My portfolio", href: "/portfolio",  icon: FolderOpen },
+  { label: "Dashboard", href: "/dashboard", icon: Home },
+  { label: "Explore", href: "/explore", icon: Compass },
+  { label: "Resources", href: "/resources", icon: Box },
+  { label: "Create", href: "/create", icon: FilePlus },
+  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "My portfolio", href: "/portfolio", icon: FolderOpen },
 ];
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
+  onToggle: () => void; // ✅ was missing entirely
 }
 
-export default function AppSidebar({ isCollapsed = false }: AppSidebarProps) {
+export default function AppSidebar({
+  isCollapsed = false,
+  onToggle, // ✅ was not destructured
+}: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
-      className={`
-        fixed top-0 left-0 h-screen bg-black flex flex-col z-20 select-none
-        transition-all duration-300
-        ${isCollapsed ? "w-[72px]" : "w-[220px]"}
-      `}
+      className={`fixed top-0 left-0 h-screen bg-black flex flex-col z-20 select-none transition-all duration-300 ${
+        isCollapsed ? "w-[72px]" : "w-[220px]"
+      }`}
     >
-      {/* Logo */}
-      <div className="px-4 pt-8 pb-10 overflow-hidden">
+      {/* ✅ Logo is now clickable and drives the toggle */}
+      <div
+        onClick={onToggle}
+        className="px-4 pt-8 pb-10 overflow-hidden cursor-pointer"
+      >
         {isCollapsed ? (
-          /* Collapsed: just a dot or monogram */
+          // Collapsed → shows "S" → click to EXPAND
           <span className="text-white text-xl font-black flex justify-center">
             S
           </span>
         ) : (
+          // Expanded → shows "Stick&Dot." → click to COLLAPSE
           <span className="text-white text-xl font-bold tracking-tight whitespace-nowrap">
             Stick&amp;Dot.
           </span>
@@ -52,35 +58,26 @@ export default function AppSidebar({ isCollapsed = false }: AppSidebarProps) {
       {/* Nav */}
       <nav className="flex flex-col gap-1 px-2 flex-1">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-          const isActive =
-            pathname === href || pathname.startsWith(href + "/");
-
+          const isActive = pathname === href || pathname.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
               title={isCollapsed ? label : undefined}
-              className={`
-                flex items-center gap-3 py-3 rounded-full text-sm font-medium
-                transition-all duration-200
-                ${isCollapsed ? "justify-center px-0" : "px-4"}
-                ${
-                  isActive
-                    ? isCollapsed
-                      ? "bg-white/15 text-white"
-                      : "bg-white/10 text-white"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }
-              `}
+              className={`flex items-center gap-3 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
+                isCollapsed ? "justify-center px-0" : "px-4"
+              } ${
+                isActive
+                  ? isCollapsed
+                    ? "bg-white/15 text-white"
+                    : "bg-white/10 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
             >
-              {/* Active glow pill behind icon when collapsed */}
               <span
-                className={`
-                  relative flex items-center justify-center
-                  ${isCollapsed && isActive
-                    ? "w-10 h-10 rounded-full bg-white/10"
-                    : ""}
-                `}
+                className={`relative flex items-center justify-center ${
+                  isCollapsed && isActive ? "w-10 h-10 rounded-full bg-white/10" : ""
+                }`}
               >
                 <Icon
                   size={18}
@@ -88,8 +85,6 @@ export default function AppSidebar({ isCollapsed = false }: AppSidebarProps) {
                   className={isActive ? "text-white" : "text-gray-500"}
                 />
               </span>
-
-              {/* Label — hidden when collapsed */}
               {!isCollapsed && <span className="truncate">{label}</span>}
             </Link>
           );
