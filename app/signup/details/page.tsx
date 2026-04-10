@@ -53,7 +53,7 @@ function DetailsContent() {
     try {
       // Replace with real API call
       await new Promise((res) => setTimeout(res, 800));
-      router.push("/explore"); // or wherever step 3 leads
+      router.push("/dashboard"); // or wherever step 3 leads
     } catch (err) {
       console.error("Details submission failed", err);
     } finally {
@@ -62,7 +62,7 @@ function DetailsContent() {
   };
 
   const handleSkip = () => {
-    router.push("/explore");
+    router.push("/dashboard");
   };
 
   return (
