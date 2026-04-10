@@ -66,7 +66,7 @@ function OtpInner() {
             <h1 className="text-3xl font-bold text-gray-900 mb-3">Enter OTP</h1>
             <p className="text-sm text-gray-500 mb-8">We sent a 6-digit code to <span className="font-medium text-gray-700">{maskedEmail}</span></p>
             <form onSubmit={handleVerify} noValidate>
-              <OtpInput length={6} value={otp} onChange={setOtp} />
+              <OtpInput length={6} onChange={setOtp} />
               {error && <p className="text-red-500 text-xs mt-3">{error}</p>}
               <button type="submit" disabled={isLoading}
                 className="w-full mt-8 py-4 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-[#2a2a2a] disabled:opacity-60 transition-all cursor-pointer">
