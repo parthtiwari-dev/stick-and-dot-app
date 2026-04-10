@@ -5,8 +5,8 @@ import AppLayout from "@/components/AppLayout";
 import { Search, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
-/* ── Mock writer data ── */
-const WRITERS = [
+/* ── Mock client data ── */
+const CLIENTS = [
   { name: "Daffa Naufal",  role: "Ceo at Google",    email: "daffanaufal@gmail.com",    phone: "+6212345678",  id: "GGL - 001" },
   { name: "Shakir Ramzi",  role: "Ceo at Garena",    email: "shakirramzi@gmail.com",    phone: "+6223467890",  id: "GRN - 002" },
   { name: "Zara Annisa",   role: "Ceo at Bukalapak", email: "annisazara@gmail.com",     phone: "+6234567890",  id: "BKL - 003" },
@@ -18,11 +18,7 @@ const WRITERS = [
   { name: "James Wayn",    role: "Ceo at Gojek",     email: "jameswayn@gmail.com",      phone: "+6290123456",  id: "GJK - 009" },
 ];
 
-const AVATAR_COLORS = [
-  "bg-orange-500","bg-gray-600","bg-red-500","bg-blue-600","bg-orange-400",
-  "bg-gray-500","bg-green-600","bg-purple-500","bg-yellow-600",
-];
-
+/* ── Avatar placeholder ── */
 function Avatar({ name, color }: { name: string; color: string }) {
   return (
     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${color}`}>
@@ -31,18 +27,18 @@ function Avatar({ name, color }: { name: string; color: string }) {
   );
 }
 
-function ProfileContent() {
+const AVATAR_COLORS = [
+  "bg-orange-500","bg-gray-600","bg-red-500","bg-blue-600","bg-orange-400",
+  "bg-gray-500","bg-green-600","bg-purple-500","bg-yellow-600",
+];
+
+function SettingsContent() {
   const [page, setPage] = useState(1);
 
   return (
     <div className="min-h-screen bg-[#f4f4f4] p-6">
-      {/* Breadcrumb + Search */}
-      <div className="flex items-center justify-between mb-4">
-        <nav className="text-sm text-gray-500">
-          <Link href="/dashboard" className="hover:text-black transition-colors">Dashboard</Link>
-          <span className="mx-1 text-gray-400">&gt;</span>
-          <span className="text-gray-800 font-medium">Profile</span>
-        </nav>
+      {/* Top bar */}
+      <div className="flex justify-end mb-4">
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-48">
           <Search size={14} />
           <span>Search</span>
@@ -56,9 +52,13 @@ function ProfileContent() {
       <div className="flex gap-5">
         {/* Left — Profile card */}
         <div className="w-[320px] shrink-0 bg-white rounded-2xl p-6 flex flex-col">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">Clients Now</h2>
+          <p className="text-xs text-gray-400 mb-5">Give the best service to get him to subscribe</p>
+
           {/* Avatar */}
           <div className="flex justify-center mb-4">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-orange-100 flex items-center justify-center">
+              {/* Illustration placeholder matching figma avatar */}
               <svg viewBox="0 0 96 96" className="w-full h-full">
                 <circle cx="48" cy="48" r="48" fill="#f97316" />
                 <ellipse cx="48" cy="38" rx="18" ry="20" fill="#fde68a" />
@@ -79,19 +79,25 @@ function ProfileContent() {
           </div>
 
           {/* Details */}
-          <div className="space-y-3 text-xs mb-5">
+          <div className="space-y-3 text-xs mb-4">
             {[
-              { label: "Phone",   value: "+6281325132288" },
-              { label: "Email",   value: "richardtyson@gmail.com" },
-              { label: "Address", value: "Merdeka Street, Wonosobo" },
+              { label: "Phone",     value: "+6281325132288" },
+              { label: "Email",     value: "richardtyson@gmail.com" },
+              { label: "Address",   value: "Merdeka Street, Wonosobo" },
+              { label: "Password",  value: "•••••••" },
+              { label: "Bank",      value: "•••••••" },
+              { label: "IIFSC code",value: "•••••••" },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-start gap-2">
-                <span className="text-gray-400 w-16 shrink-0">{label}</span>
-                <span className="text-gray-400">:</span>
+                <span className="text-gray-400 w-20 shrink-0">{label}</span>
+                <span className="text-gray-300 text-gray-500">:</span>
                 <span className="text-gray-700">{value}</span>
               </div>
             ))}
           </div>
+
+          {/* Checkbox placeholder */}
+          <div className="w-4 h-4 border border-gray-300 rounded mb-4" />
 
           {/* Description */}
           <div className="mb-5">
@@ -106,10 +112,10 @@ function ProfileContent() {
           </button>
         </div>
 
-        {/* Right — Our writers table */}
+        {/* Right — My Clients table */}
         <div className="flex-1 bg-white rounded-2xl p-5 flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900">Our writers</h2>
+            <h2 className="text-base font-semibold text-gray-900">My Clients</h2>
             <div className="flex items-center gap-2">
               <button className="flex items-center gap-1.5 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
                 All Data <ChevronDown size={12} />
@@ -130,21 +136,21 @@ function ProfileContent() {
 
           {/* Rows */}
           <div className="flex-1">
-            {WRITERS.map((writer, i) => (
+            {CLIENTS.map((client, i) => (
               <div
-                key={writer.id}
+                key={client.id}
                 className="grid grid-cols-4 items-center py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-lg px-1"
               >
                 <div className="flex items-center gap-2.5">
-                  <Avatar name={writer.name} color={AVATAR_COLORS[i]} />
+                  <Avatar name={client.name} color={AVATAR_COLORS[i]} />
                   <div>
-                    <p className="text-xs font-semibold text-gray-800">{writer.name}</p>
-                    <p className="text-[10px] text-gray-400">{writer.role}</p>
+                    <p className="text-xs font-semibold text-gray-800">{client.name}</p>
+                    <p className="text-[10px] text-gray-400">{client.role}</p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-500">{writer.email}</span>
-                <span className="text-xs text-gray-500">{writer.phone}</span>
-                <span className="text-xs text-gray-500">{writer.id}</span>
+                <span className="text-xs text-gray-500">{client.email}</span>
+                <span className="text-xs text-gray-500">{client.phone}</span>
+                <span className="text-xs text-gray-500">{client.id}</span>
               </div>
             ))}
           </div>
@@ -174,10 +180,10 @@ function ProfileContent() {
   );
 }
 
-export default function DashboardProfilePage() {
+export default function SettingsPage() {
   return (
     <AppLayout>
-      <ProfileContent />
+      <SettingsContent />
     </AppLayout>
   );
 }

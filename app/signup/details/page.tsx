@@ -53,6 +53,9 @@ function DetailsContent() {
     try {
       // Replace with real API call
       await new Promise((res) => setTimeout(res, 800));
+      // Persist selected role so dashboard can route correctly
+      localStorage.setItem("sd_user_role", selectedRole);
+      localStorage.setItem("sd_user_name", form.name || "Shaivya");
       router.push("/dashboard"); // or wherever step 3 leads
     } catch (err) {
       console.error("Details submission failed", err);
@@ -62,6 +65,7 @@ function DetailsContent() {
   };
 
   const handleSkip = () => {
+    localStorage.setItem("sd_user_role", selectedRole);
     router.push("/dashboard");
   };
 
