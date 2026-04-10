@@ -1,233 +1,183 @@
 "use client";
 
+import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
-import { Search, ChevronDown, SlidersHorizontal, Star, TrendingUp, TrendingDown } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
-function Sparkline({ up }: { up: boolean }) {
+/* ── Mock writer data ── */
+const WRITERS = [
+  { name: "Daffa Naufal",  role: "Ceo at Google",    email: "daffanaufal@gmail.com",    phone: "+6212345678",  id: "GGL - 001" },
+  { name: "Shakir Ramzi",  role: "Ceo at Garena",    email: "shakirramzi@gmail.com",    phone: "+6223467890",  id: "GRN - 002" },
+  { name: "Zara Annisa",   role: "Ceo at Bukalapak", email: "annisazara@gmail.com",     phone: "+6234567890",  id: "BKL - 003" },
+  { name: "Chris Evans",   role: "Ceo at Amazon",    email: "chrisevans@gmail.com",     phone: "+6245678901",  id: "AMZ - 004" },
+  { name: "Jack Miller",   role: "Ceo at Dana",      email: "jackmiller@gmail.com",     phone: "+6256789012",  id: "DAN - 005" },
+  { name: "Richard Kyle",  role: "Ceo at Bibit",     email: "ricardkyle@gmail.com",     phone: "+6267890123",  id: "BIT - 006" },
+  { name: "John Wich",     role: "Ceo at Shopee",    email: "johnwhich@gmail.com",      phone: "+627890123",   id: "SHP - 007" },
+  { name: "Brian Dawn",    role: "Ceo at Lazada",    email: "briandawn@gmail.com",      phone: "+6289012345",  id: "LZD - 008" },
+  { name: "James Wayn",    role: "Ceo at Gojek",     email: "jameswayn@gmail.com",      phone: "+6290123456",  id: "GJK - 009" },
+];
+
+const AVATAR_COLORS = [
+  "bg-orange-500","bg-gray-600","bg-red-500","bg-blue-600","bg-orange-400",
+  "bg-gray-500","bg-green-600","bg-purple-500","bg-yellow-600",
+];
+
+function Avatar({ name, color }: { name: string; color: string }) {
   return (
-    <svg width="60" height="24" viewBox="0 0 60 24" fill="none">
-      {up
-        ? <polyline points="0,20 10,15 20,18 30,10 40,14 50,6 60,8" stroke="#4ade80" strokeWidth="2" fill="none" />
-        : <polyline points="0,6 10,10 20,8 30,14 40,10 50,18 60,20" stroke="#f87171" strokeWidth="2" fill="none" />}
-    </svg>
+    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${color}`}>
+      {name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+    </div>
   );
 }
 
-function DonutChart() {
-  const r = 54, cx = 70, cy = 70, circ = 2 * Math.PI * r;
-  const completeDash = (186 / 277) * circ, inprogressDash = (47 / 277) * circ;
-  return (
-    <svg width="140" height="140" viewBox="0 0 140 140">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#333" strokeWidth="16" />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e5e5" strokeWidth="16" strokeDasharray={`${completeDash} ${circ - completeDash}`} strokeDashoffset={circ * 0.25} strokeLinecap="round" />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#888" strokeWidth="16" strokeDasharray={`${inprogressDash} ${circ - inprogressDash}`} strokeDashoffset={circ * 0.25 - completeDash} strokeLinecap="round" />
-      <text x={cx} y={cy - 6} textAnchor="middle" fill="white" fontSize="10">Complete Task</text>
-      <text x={cx} y={cy + 14} textAnchor="middle" fill="white" fontSize="18" fontWeight="700">186 Task</text>
-    </svg>
-  );
-}
+function ProfileContent() {
+  const [page, setPage] = useState(1);
 
-function TrendsChart() {
   return (
-    <svg width="100%" height="120" viewBox="0 0 300 120" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="tg" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="white" stopOpacity="0.15" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d="M0,80 C30,70 60,30 90,50 C120,70 150,20 180,40 C210,60 240,30 270,20 L300,15 L300,120 L0,120 Z" fill="url(#tg)" />
-      <path d="M0,80 C30,70 60,30 90,50 C120,70 150,20 180,40 C210,60 240,30 270,20 L300,15" stroke="white" strokeWidth="2" fill="none" />
-    </svg>
-  );
-}
-
-function MiniBarChart() {
-  const bars = [40, 55, 35, 70, 50, 45, 60];
-  return (
-    <svg width="100" height="50" viewBox="0 0 100 50">
-      {bars.map((h, i) => <rect key={i} x={i * 14 + 2} y={50 - (h / 100) * 40 - 8} width="10" height={(h / 100) * 40 + 4} rx="2" fill={i === 6 ? "white" : "#555"} />)}
-    </svg>
-  );
-}
-
-function PieChart() {
-  return (
-    <svg width="80" height="80" viewBox="0 0 80 80">
-      <circle cx="40" cy="40" r="30" fill="none" stroke="#555" strokeWidth="20" />
-      <circle cx="40" cy="40" r="30" fill="none" stroke="#888" strokeWidth="20" strokeDasharray="60 188" strokeDashoffset="47" />
-      <circle cx="40" cy="40" r="30" fill="none" stroke="#aaa" strokeWidth="20" strokeDasharray="40 188" strokeDashoffset="-13" />
-      <text x="40" y="40" textAnchor="middle" fill="white" fontSize="8" dy="3">xyz</text>
-    </svg>
-  );
-}
-
-export default function WriterDashboardPage() {
-  return (
-    <AppLayout sidebarCollapsed={true}>
-      <div className="min-h-screen bg-[#f4f4f4] p-6">
-        <div className="flex justify-end mb-6">
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-48">
-            <Search size={14} /><span>Search</span>
-          </div>
+    <div className="min-h-screen bg-[#f4f4f4] p-6">
+      {/* Breadcrumb + Search */}
+      <div className="flex items-center justify-between mb-4">
+        <nav className="text-sm text-gray-500">
+          <Link href="/dashboard/writer" className="hover:text-black transition-colors">Dashboard</Link>
+          <span className="mx-1 text-gray-400">&gt;</span>
+          <span className="text-gray-800 font-medium">Profile</span>
+        </nav>
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-48">
+          <Search size={14} />
+          <span>Search</span>
         </div>
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, Shaivya</h1>
-            <p className="text-sm text-gray-500">Your Dashboard Preview</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="bg-black text-white text-xs font-semibold px-4 py-2 rounded-full">Today</button>
-            <button className="bg-white text-gray-600 text-xs font-medium px-4 py-2 rounded-full border border-gray-200">Select Date</button>
-            <button className="bg-white text-gray-600 text-xs font-medium px-4 py-2 rounded-full border border-gray-200 flex items-center gap-1">
-              <SlidersHorizontal size={12} />Filter
-            </button>
-          </div>
-        </div>
+      </div>
 
-        {/* KPI Row */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          {[
-            { label: "Payments received", value: "Rs. XYZ", pct: "+39.69%", up: true, emoji: "🪙" },
-            { label: "Words written", value: "XXX", pct: "-5.23%", up: false, emoji: "📘" },
-            { label: "Engagement so far", value: "50%", pct: "+39.69%", up: true, emoji: "🧩" },
-          ].map((kpi) => (
-            <div key={kpi.label} className="bg-black rounded-2xl p-4 flex items-start gap-3">
-              <div className="text-2xl">{kpi.emoji}</div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-400 mb-1">{kpi.label}</p>
-                <p className="text-2xl font-bold text-white mb-2">{kpi.value}</p>
-                <div className="flex items-center gap-1">
-                  <Sparkline up={kpi.up} />
-                  <span className={`text-xs font-medium ${kpi.up ? "text-green-400" : "text-red-400"}`}>{kpi.pct}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Heading */}
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Welcome, Shaivya</h1>
 
-        {/* Overall feedback */}
-        <div className="bg-black rounded-2xl p-5 mb-4 flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="text-2xl">🏆</div>
-            <div>
-              <p className="text-xs text-gray-400">Overall feedback</p>
-              <p className="text-3xl font-bold text-white">12k</p>
-              <p className="text-xs text-gray-400">Feedbacks</p>
+      {/* Two-column layout */}
+      <div className="flex gap-5">
+        {/* Left — Profile card */}
+        <div className="w-[320px] shrink-0 bg-white rounded-2xl p-6 flex flex-col">
+          {/* Avatar */}
+          <div className="flex justify-center mb-4">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-orange-100 flex items-center justify-center">
+              <svg viewBox="0 0 96 96" className="w-full h-full">
+                <circle cx="48" cy="48" r="48" fill="#f97316" />
+                <ellipse cx="48" cy="38" rx="18" ry="20" fill="#fde68a" />
+                <ellipse cx="48" cy="80" rx="26" ry="20" fill="#1f2937" />
+                <ellipse cx="35" cy="34" rx="6" ry="8" fill="#f97316" />
+                <ellipse cx="61" cy="34" rx="6" ry="8" fill="#f97316" />
+                <circle cx="43" cy="38" r="3" fill="#1f2937" />
+                <circle cx="53" cy="38" r="3" fill="#1f2937" />
+                <path d="M43 46 Q48 50 53 46" stroke="#1f2937" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
-          <div className="flex gap-0.5">
-            {[1,2,3,4,5].map(s => <Star key={s} size={20} className="text-yellow-400 fill-yellow-400" />)}
-          </div>
-          <div className="ml-auto bg-[#2a2a2a] rounded-xl p-3 flex items-center gap-3 w-64">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
-            <div className="flex-1">
-              <p className="text-white text-xs font-semibold">Shaivya S.</p>
-              <p className="text-gray-400 text-[10px] line-clamp-2">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-              <span className="text-[10px] bg-black text-gray-300 px-2 py-0.5 rounded-full mt-1 inline-block">+$XXX</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Top Articles + Trends */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="bg-white rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-semibold text-gray-800">Your Top Articles</span>
-              <button className="text-xs text-gray-400">Details</button>
-            </div>
-            {[1,2,3].map(n => (
-              <div key={n} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-500">#{n}</span>
-                  <span className="text-sm text-gray-800">Article Name</span>
-                </div>
-                <div className="text-right">
-                  <div className="flex gap-0.5 justify-end">
-                    {[1,2,3,4,5].map(s => <Star key={s} size={10} className="text-yellow-400 fill-yellow-400" />)}
-                  </div>
-                  <p className="text-[11px] text-gray-400">12K Views</p>
-                </div>
+          <div className="text-center mb-5">
+            <p className="font-semibold text-gray-900 text-sm">Richard Tyson</p>
+            <p className="text-xs text-gray-500">Ceo at Tokopedia</p>
+            <p className="text-xs text-gray-500 mt-0.5">Employees ID : CLT - 001</p>
+          </div>
+
+          {/* Details */}
+          <div className="space-y-3 text-xs mb-5">
+            {[
+              { label: "Phone",   value: "+6281325132288" },
+              { label: "Email",   value: "richardtyson@gmail.com" },
+              { label: "Address", value: "Merdeka Street, Wonosobo" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-start gap-2">
+                <span className="text-gray-400 w-16 shrink-0">{label}</span>
+                <span className="text-gray-400">:</span>
+                <span className="text-gray-700">{value}</span>
               </div>
             ))}
           </div>
-          <div className="bg-black rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-white">Trends</span>
-              <div className="flex items-center gap-1 text-red-400 text-xs">
-                <TrendingDown size={12} /><span>-5.23%</span>
-              </div>
-            </div>
-            <TrendsChart />
+
+          {/* Description */}
+          <div className="mb-5">
+            <p className="text-xs font-semibold text-gray-800 mb-1">Description</p>
+            <p className="text-xs text-gray-400 leading-relaxed line-clamp-3">
+              I&apos;m the CEO at Tokopedia. Establishing an application myself is my goal. I want to help ...
+            </p>
           </div>
+
+          <button className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors mt-auto">
+            Edit Details
+          </button>
         </div>
 
-        {/* Engagement + Category + Audience */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="bg-white rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-gray-800">Engagement</span>
+        {/* Right — Our writers table */}
+        <div className="flex-1 bg-white rounded-2xl p-5 flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-gray-900">Our writers</h2>
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-1.5 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                All Data <ChevronDown size={12} />
+              </button>
+              <button className="flex items-center gap-1.5 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                August <ChevronDown size={12} />
+              </button>
             </div>
-            <div className="flex gap-4 text-xs mb-3">
-              <div><p className="text-gray-400">This Week</p><p className="font-semibold text-green-600">+20%</p></div>
-              <div><p className="text-gray-400">Last Week</p><p className="font-semibold text-red-500">-10%</p></div>
-            </div>
-            <MiniBarChart />
           </div>
-          <div className="bg-white rounded-2xl p-5">
-            <span className="text-sm font-semibold text-gray-800">Top Category</span>
-            {[1,2,3].map(i => (
-              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm">⊙</div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Category Name</p>
-                  <p className="text-xs text-gray-400">Popularity 10.1K</p>
+
+          {/* Table header */}
+          <div className="grid grid-cols-4 text-xs text-gray-400 font-medium pb-2 border-b border-gray-100 mb-1">
+            <span>Name</span>
+            <span>Email</span>
+            <span>Phone Number</span>
+            <span>Employees ID</span>
+          </div>
+
+          {/* Rows */}
+          <div className="flex-1">
+            {WRITERS.map((writer, i) => (
+              <div
+                key={writer.id}
+                className="grid grid-cols-4 items-center py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-lg px-1"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Avatar name={writer.name} color={AVATAR_COLORS[i]} />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-800">{writer.name}</p>
+                    <p className="text-[10px] text-gray-400">{writer.role}</p>
+                  </div>
                 </div>
+                <span className="text-xs text-gray-500">{writer.email}</span>
+                <span className="text-xs text-gray-500">{writer.phone}</span>
+                <span className="text-xs text-gray-500">{writer.id}</span>
               </div>
             ))}
           </div>
-          <div className="bg-black rounded-2xl p-5">
-            <span className="text-sm font-semibold text-white">Audience</span>
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex-1 space-y-2">
-                {["Lorem Ipsum","Lorem Ipsum","Lorem Ipsum","Lorem Ipsum"].map((l,i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${["bg-gray-300","bg-gray-500","bg-gray-600","bg-gray-700"][i]}`} />
-                    <span className="text-[11px] text-gray-400">{l}</span>
-                  </div>
-                ))}
-              </div>
-              <PieChart />
-            </div>
-          </div>
-        </div>
 
-        {/* Feedback */}
-        <div>
-          <h2 className="text-base font-semibold text-gray-800 mb-3">Feedback</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2 bg-black rounded-2xl p-5">
-              <p className="text-white text-sm font-semibold text-center mb-4">Your Recent Performance</p>
-              <div className="flex divide-x divide-gray-700">
-                {[{label:"impressions",val:"12k"},{label:"Likes",val:"12k"},{label:"Feedbacks",val:"12k"}].map((item) => (
-                  <div key={item.label} className="flex-1 text-center px-4">
-                    <p className="text-2xl font-bold text-white">{item.val}</p>
-                    <p className="text-xs text-gray-400 mt-1">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-black rounded-2xl p-5 flex flex-col items-center justify-center">
-              <p className="text-white text-sm font-semibold mb-1">Overall</p>
-              <p className="text-3xl font-bold text-white mb-2">4.5/5</p>
-              <div className="flex gap-0.5">
-                {[1,2,3,4].map(s => <Star key={s} size={16} className="text-yellow-400 fill-yellow-400" />)}
-                <Star size={16} className="text-yellow-400 fill-yellow-400 opacity-50" />
-              </div>
+          {/* Pagination */}
+          <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100">
+            <span className="text-xs text-gray-400">Showing 1 to 9 of 90 entries</span>
+            <div className="flex items-center gap-1">
+              <button className="text-xs text-gray-400 px-2 py-1 hover:text-gray-700 transition-colors">Previous</button>
+              {[1, 2].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
+                    page === p ? "bg-orange-500 text-white" : "text-gray-500 hover:bg-gray-100"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button className="text-xs text-gray-400 px-2 py-1 hover:text-gray-700 transition-colors">Next</button>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function DashboardProfilePage() {
+  return (
+    <AppLayout>
+      <ProfileContent />
     </AppLayout>
   );
 }
