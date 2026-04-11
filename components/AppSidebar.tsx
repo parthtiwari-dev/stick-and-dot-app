@@ -5,18 +5,17 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, Settings, FolderOpen,
   Compass, FilePlus, User, FileText, Rocket,
-  ChevronLeft, ChevronRight, Grid3X3
+  ChevronLeft, ChevronRight, DollarSign,
 } from "lucide-react";
 
 type Role = "writer" | "business" | "reader" | "subject-expert";
 
-// Path takes priority; shared pages fall back to localStorage
 function roleFromPath(p: string): Role | null {
   if (p.startsWith("/dashboard/business")) return "business";
   if (p.startsWith("/dashboard/reader")) return "reader";
   if (p.startsWith("/dashboard/subject-expert")) return "subject-expert";
   if (p.startsWith("/dashboard/writer")) return "writer";
-  return null; // shared page - use localStorage
+  return null;
 }
 
 function storageRole(): Role {
@@ -30,40 +29,44 @@ function storageRole(): Role {
   return "writer";
 }
 
-const NAV: Record<Role, { label: string; href: string; icon: React.ComponentType<{size?:number;strokeWidth?:number}> }[]> = {
+type NavItem = { label: string; href: string; icon: React.ComponentType<{size?:number;strokeWidth?:number}> };
+
+const NAV: Record<Role, NavItem[]> = {
   writer: [
-    { label: "Dashboard",    href: "/dashboard/writer",          icon: LayoutDashboard },
-    { label: "Resources",    href: "/resources",                  icon: BookOpen },
-    { label: "New Article",  href: "/dashboard/writer/create",   icon: FilePlus },
-    { label: "Settings",     href: "/dashboard/writer/settings",  icon: Settings },
+    { label: "Dashboard",   href: "/dashboard/writer",        icon: LayoutDashboard },
+    { label: "Resources",   href: "/resources",               icon: BookOpen },
+    { label: "New Article", href: "/dashboard/writer/create", icon: FilePlus },
+    { label: "Portfolio",   href: "/portfolio",               icon: FolderOpen },
+    { label: "Settings",    href: "/dashboard/writer/settings", icon: Settings },
   ],
   reader: [
-    { label: "Dashboard",      href: "/dashboard/reader",          icon: LayoutDashboard },
-    { label: "Resources",      href: "/resources",                  icon: BookOpen },
-    { label: "Explore",        href: "/explore",                    icon: Compass },
-    { label: "Reading List",   href: "/dashboard/reader/create",    icon: FilePlus },
-    { label: "Settings",       href: "/dashboard/reader/settings",  icon: Settings },
+    { label: "Dashboard",     href: "/dashboard/reader",          icon: LayoutDashboard },
+    { label: "Resources",     href: "/resources",                 icon: BookOpen },
+    { label: "Explore",       href: "/explore",                   icon: Compass },
+    { label: "Reading List",  href: "/dashboard/reader/create",   icon: FilePlus },
+    { label: "Settings",      href: "/dashboard/reader/settings", icon: Settings },
   ],
   business: [
     { label: "Dashboard", href: "/dashboard/business",          icon: LayoutDashboard },
-    { label: "Resources", href: "/resources",                    icon: BookOpen },
-    { label: "Create",    href: "/dashboard/business/create",    icon: FilePlus },
-    { label: "Settings",  href: "/dashboard/business/settings",  icon: Settings },
+    { label: "Resources", href: "/resources",                   icon: BookOpen },
+    { label: "Commission",href: "/dashboard/business/create",   icon: FilePlus },
+    { label: "Leads",     href: "/leads",                       icon: DollarSign },
+    { label: "Settings",  href: "/dashboard/business/settings", icon: Settings },
   ],
   "subject-expert": [
-    { label: "Dashboard",    href: "/dashboard/subject-expert",          icon: LayoutDashboard },
-    { label: "Resources",    href: "/resources",                          icon: BookOpen },
-    { label: "Submit Review", href: "/dashboard/subject-expert/create",   icon: FilePlus },
-    { label: "Settings",     href: "/dashboard/subject-expert/settings",  icon: Settings },
-    { label: "My Portfolio", href: "/portfolio",                          icon: FolderOpen },
+    { label: "Dashboard",     href: "/dashboard/subject-expert",         icon: LayoutDashboard },
+    { label: "Resources",     href: "/resources",                         icon: BookOpen },
+    { label: "Submit Review", href: "/dashboard/subject-expert/create",  icon: FilePlus },
+    { label: "Portfolio",     href: "/portfolio",                         icon: FolderOpen },
+    { label: "Settings",      href: "/dashboard/subject-expert/settings", icon: Settings },
   ],
 };
 
-const ACCOUNT: Record<Role, { label: string; href: string; icon: React.ComponentType<{size?:number;strokeWidth?:number}> }[]> = {
-  writer:           [{ label:"Profile", href:"/dashboard/writer/settings",          icon:User  }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
-  reader:           [{ label:"Profile", href:"/dashboard/reader/settings",          icon:User  }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
-  business:         [{ label:"Profile", href:"/dashboard/business/settings",        icon:User  }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
-  "subject-expert": [{ label:"Profile", href:"/dashboard/subject-expert/settings",  icon:User  }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
+const ACCOUNT: Record<Role, NavItem[]> = {
+  writer:           [{ label:"Profile", href:"/dashboard/writer/profile",         icon:User }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
+  reader:           [{ label:"Profile", href:"/dashboard/reader/profile",         icon:User }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
+  business:         [{ label:"Profile", href:"/dashboard/business/profile",       icon:User }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
+  "subject-expert": [{ label:"Profile", href:"/dashboard/subject-expert/profile", icon:User }, { label:"Sign In", href:"/login", icon:FileText }, { label:"Sign Up", href:"/signup", icon:Rocket }],
 };
 
 interface Props { collapsed: boolean; onToggle: () => void; }
@@ -101,19 +104,19 @@ export default function AppSidebar({ collapsed, onToggle }: Props) {
               className={`flex items-center justify-center py-3 rounded-xl transition-all ${
                 isActive(href) ? "bg-[#1a1a1a] text-white" : "text-gray-500 hover:text-white hover:bg-white/5"
               }`}>
-              <Icon size={18} strokeWidth={1.5}/>
+              <Icon size={18} strokeWidth={1.5} />
             </Link>
           ))}
-          <div className="my-2 border-t border-white/10"/>
+          <div className="my-2 border-t border-white/10" />
           {accountItems.map(({ label, href, icon: Icon }) => (
             <Link key={`acc-${label}`} href={href} title={label}
               className="flex items-center justify-center py-3 rounded-xl text-gray-600 hover:text-white hover:bg-white/5 transition-all">
-              <Icon size={16} strokeWidth={1.5}/>
+              <Icon size={16} strokeWidth={1.5} />
             </Link>
           ))}
         </div>
         <button onClick={onToggle} className="flex justify-center pb-6 text-gray-600 hover:text-white cursor-pointer">
-          <ChevronRight size={16}/>
+          <ChevronRight size={16} />
         </button>
       </aside>
     );
@@ -132,17 +135,17 @@ export default function AppSidebar({ collapsed, onToggle }: Props) {
         <nav className="flex flex-col gap-0.5 mb-4">
           {navItems.map(({ label, href, icon: Icon }) => (
             <Link key={`nav-${label}-${href}`} href={href} className={linkCls(href)}>
-              <Icon size={17} strokeWidth={1.5}/><span>{label}</span>
+              <Icon size={17} strokeWidth={1.5} /><span>{label}</span>
             </Link>
           ))}
         </nav>
-        <div className="border-t border-white/10 my-2"/>
+        <div className="border-t border-white/10 my-2" />
         <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest mb-2 px-2 mt-3">Account Pages</p>
         <nav className="flex flex-col gap-0.5">
           {accountItems.map(({ label, href, icon: Icon }) => (
             <Link key={`acc-${label}`} href={href}
               className="flex items-center gap-3 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">
-              <Icon size={17} strokeWidth={1.5}/><span>{label}</span>
+              <Icon size={17} strokeWidth={1.5} /><span>{label}</span>
             </Link>
           ))}
         </nav>
@@ -152,7 +155,7 @@ export default function AppSidebar({ collapsed, onToggle }: Props) {
         <p className="text-gray-600 text-sm font-bold">Logo</p>
       </div>
       <button onClick={onToggle} className="flex items-center justify-end px-5 pb-5 text-gray-600 hover:text-white cursor-pointer">
-        <ChevronLeft size={16}/>
+        <ChevronLeft size={16} />
       </button>
     </aside>
   );
