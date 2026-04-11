@@ -36,7 +36,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-gray-700 py-4 text-center text-xs text-gray-500">
-        © 2023 Designed By Shaivya Saini
+        © 2026 Designed By Parth Tiwari
       </div>
     </footer>
   );
