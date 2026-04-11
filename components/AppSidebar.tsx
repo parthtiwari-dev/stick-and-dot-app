@@ -34,14 +34,15 @@ const NAV: Record<Role, { label: string; href: string; icon: React.ComponentType
   writer: [
     { label: "Dashboard",    href: "/dashboard/writer",          icon: LayoutDashboard },
     { label: "Resources",    href: "/resources",                  icon: BookOpen },
+    { label: "New Article",  href: "/dashboard/writer/create",   icon: FilePlus },
     { label: "Settings",     href: "/dashboard/writer/settings",  icon: Settings },
-    { label: "Lorem Ipsum",  href: "/resources",                  icon: Grid3X3 },
   ],
   reader: [
-    { label: "Dashboard", href: "/dashboard/reader",          icon: LayoutDashboard },
-    { label: "Resources", href: "/resources",                   icon: BookOpen },
-    { label: "Explore",   href: "/explore",                     icon: Compass },
-    { label: "Settings",  href: "/dashboard/reader/settings",   icon: Settings },
+    { label: "Dashboard",      href: "/dashboard/reader",          icon: LayoutDashboard },
+    { label: "Resources",      href: "/resources",                  icon: BookOpen },
+    { label: "Explore",        href: "/explore",                    icon: Compass },
+    { label: "Reading List",   href: "/dashboard/reader/create",    icon: FilePlus },
+    { label: "Settings",       href: "/dashboard/reader/settings",  icon: Settings },
   ],
   business: [
     { label: "Dashboard", href: "/dashboard/business",          icon: LayoutDashboard },
@@ -52,7 +53,7 @@ const NAV: Record<Role, { label: string; href: string; icon: React.ComponentType
   "subject-expert": [
     { label: "Dashboard",    href: "/dashboard/subject-expert",          icon: LayoutDashboard },
     { label: "Resources",    href: "/resources",                          icon: BookOpen },
-    { label: "Create",       href: "/resources",                          icon: FilePlus },
+    { label: "Submit Review", href: "/dashboard/subject-expert/create",   icon: FilePlus },
     { label: "Settings",     href: "/dashboard/subject-expert/settings",  icon: Settings },
     { label: "My Portfolio", href: "/portfolio",                          icon: FolderOpen },
   ],
