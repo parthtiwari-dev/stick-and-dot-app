@@ -1,35 +1,52 @@
 "use client";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
+import { Clock } from "lucide-react";
 
-const PORTFOLIO_ITEMS = [
-  { id: "1", title: "Title Name", author: "NAME AUTHOR/BUSINESS" },
-  { id: "2", title: "Title Name", author: "NAME AUTHOR/BUSINESS" },
-  { id: "3", title: "Title Name", author: "NAME AUTHOR/BUSINESS" },
-];
+function ArticleCard({ id, featured }: { id: string; featured?: boolean }) {
+  return (
+    <Link href={`/articles/${id}`}>
+      <div className={`relative cursor-pointer transition-all ${featured ? "scale-105 z-10 shadow-2xl" : "opacity-90 hover:opacity-100"}`}>
+        <div className="relative rounded-2xl overflow-hidden" style={{height:320}}>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#c8b8d0] via-[#a89ab5] to-[#7a6b8a]"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"/>
+          {featured && (
+            <div className="absolute top-3 right-3 bg-[#111] text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+              <Clock size={11}/>X mins read
+            </div>
+          )}
+          <div className="absolute bottom-12 left-0 right-0 px-5">
+            <h3 className="text-gray-900 text-2xl font-bold">Title Name</h3>
+          </div>
+          <div className="absolute bottom-4 left-5 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-white/80"/>
+            <span className="text-gray-800 text-xs font-medium">NAME AUTHOR/BUSINESS</span>
+          </div>
+        </div>
+        {featured && (
+          <div className="mt-3 text-center px-2">
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+            </p>
+            <button className="mt-3 bg-[#1A1A1A] border border-gray-600 text-white text-sm font-semibold px-6 py-2.5 rounded-full hover:bg-[#2a2a2a] transition-colors cursor-pointer">
+              Read Now →
+            </button>
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
 
 export default function PortfolioPage() {
   return (
-    <AppLayout>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900 text-center mb-8">My portfolio</h1>
-        <div className="grid grid-cols-3 gap-5">
-          {PORTFOLIO_ITEMS.map(item => (
-            <Link key={item.id} href={`/articles/${item.id}`}>
-              <div className="bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow border border-gray-100">
-                <div className="h-48 bg-gradient-to-br from-[#9b8ea8] to-[#c4b5c9]"/>
-                <div className="p-4">
-                  <p className="font-semibold text-gray-900 text-sm mb-2">{item.title}</p>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-5 h-5 rounded-full bg-gray-200"/>
-                    <p className="text-xs text-gray-400">{item.author}</p>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
-                  <button className="text-xs text-gray-700 font-semibold hover:text-black transition-colors cursor-pointer">Read Now →</button>
-                </div>
-              </div>
-            </Link>
-          ))}
+    <AppLayout bg="bg-[#111111]">
+      <div className="p-8 min-h-screen">
+        <h1 className="text-3xl font-bold text-white text-center mb-10">My portfolio</h1>
+        <div className="grid grid-cols-3 gap-6 items-start">
+          <ArticleCard id="1"/>
+          <ArticleCard id="2" featured/>
+          <ArticleCard id="3"/>
         </div>
       </div>
     </AppLayout>
