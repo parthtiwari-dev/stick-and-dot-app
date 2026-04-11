@@ -1,4 +1,2 @@
 import { redirect } from "next/navigation";
-export default function OldProfileRedirect() {
-  redirect("/dashboard/writer/profile");
-}
+export default function P() { redirect("/dashboard/writer"); }

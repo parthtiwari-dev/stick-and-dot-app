@@ -1,4 +1,2 @@
 import { redirect } from "next/navigation";
-export default function OldSettingsRedirect() {
-  redirect("/dashboard/business/settings");
-}
+export default function P() { redirect("/dashboard/writer/settings"); }

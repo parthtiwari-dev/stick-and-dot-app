@@ -1,73 +1,77 @@
 "use client";
 import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
-import { PlusSquare } from "lucide-react";
+import Link from "next/link";
+import { PlusCircle } from "lucide-react";
 
-interface Row { id: number; value: string; }
-const inp = "w-full bg-gray-100 rounded-lg px-4 py-2.5 text-sm text-gray-700 outline-none focus:bg-gray-200 transition-colors placeholder:text-gray-400";
+interface Instruction { id: number; value: string; }
 
-export default function CreateTasks() {
-  const [form, setForm] = useState({ topic:"", dueDate:"", wordCount:"", additional:"", payment:"" });
-  const [rows, setRows] = useState<Row[]>([]);
-  const [done, setDone] = useState(false);
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(p=>({...p,[k]:e.target.value}));
+export default function CreateTask() {
+  const [topic, setTopic] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [wordCount, setWordCount] = useState("");
+  const [payment, setPayment] = useState("");
+  const [instructions, setInstructions] = useState<Instruction[]>([{ id: 1, value: "" }]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setDone(true);
-    setTimeout(()=>setDone(false), 3000);
-  };
+  const addRow = () => setInstructions(p => [...p, { id: Date.now(), value: "" }]);
+  const updateRow = (id: number, val: string) =>
+    setInstructions(p => p.map(i => i.id === id ? { ...i, value: val } : i));
+
+  const inp = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 bg-white placeholder:text-gray-300 transition-colors";
 
   return (
     <AppLayout bg="bg-[#F4F4F4]">
-      <div className="p-6 max-w-xl">
-        <p className="text-xs text-gray-400 mb-1">Dashboard&gt;Create tasks</p>
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Welcome, Business name</h1>
+      <div className="p-4 md:p-6 max-w-2xl">
+        <p className="text-xs text-gray-400 mb-1">
+          <Link href="/dashboard/business" className="hover:text-gray-700">Dashboard</Link>
+          &gt;Create Tasks
+        </p>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Welcome, Business name</h1>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-7">
-          {[
-            ["topic","Topic","The title that will go as it is","text"],
-            ["dueDate","Due data","The date of completion","date"],
-            ["wordCount","Word count","Words that would be compensated","number"],
-            ["additional","Additional instructions","Other important instructions to take care of","text"],
-            ["payment","Payment for the work","Total payment for writer and subject matter expert","text"],
-          ].map(([k,label,hint,type])=>(
-            <div key={k as string}>
-              <p className="text-base font-semibold text-gray-900 mb-0.5">{label as string}</p>
-              <p className="text-xs text-gray-400 mb-2">{hint as string}</p>
-              <input
-                type={type as string}
-                value={form[k as keyof typeof form]}
-                onChange={set(k as keyof typeof form)}
-                className={inp}
-              />
-            </div>
-          ))}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 flex flex-col gap-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Topic</label>
+            <p className="text-xs text-gray-400 mb-2">Pick the the subject to</p>
+            <input type="text" value={topic} onChange={e => setTopic(e.target.value)}
+              placeholder="Article topic…" className={inp} />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Due date</label>
+            <p className="text-xs text-gray-400 mb-2">The date of completion is</p>
+            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+              className={inp} />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Word count</label>
+            <p className="text-xs text-gray-400 mb-2">Words that should be compromised</p>
+            <input type="number" value={wordCount} onChange={e => setWordCount(e.target.value)}
+              placeholder="e.g. 1500" className={inp} />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Additional instructions</label>
+            <p className="text-xs text-gray-400 mb-2">Other important factors/keywords/context</p>
+            {instructions.map(inst => (
+              <input key={inst.id} type="text" value={inst.value}
+                onChange={e => updateRow(inst.id, e.target.value)}
+                placeholder="Add instruction…" className={`${inp} mb-2`} />
+            ))}
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Payment for the work</label>
+            <p className="text-xs text-gray-400 mb-2">Total payment for writer and subject matter expert</p>
+            <input type="text" value={payment} onChange={e => setPayment(e.target.value)}
+              placeholder="₹ or $" className={inp} />
+          </div>
 
-          {rows.map(r=>(
-            <div key={r.id}>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-base font-semibold text-gray-900">Extra Instruction</p>
-                <button type="button" onClick={()=>setRows(p=>p.filter(x=>x.id!==r.id))} className="text-gray-400 hover:text-red-400 text-xs cursor-pointer">Remove</button>
-              </div>
-              <input type="text" value={r.value}
-                onChange={e=>setRows(p=>p.map(x=>x.id===r.id?{...x,value:e.target.value}:x))}
-                className={inp}/>
-            </div>
-          ))}
-
-          <button type="button" onClick={()=>setRows(p=>[...p,{id:Date.now(),value:""}])}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer w-fit">
-            <PlusSquare size={20} strokeWidth={1.5}/> <span className="text-sm font-medium">Add more rows for instructions</span>
+          <button onClick={addRow}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 cursor-pointer transition-colors w-fit">
+            <PlusCircle size={16} />Add more rows for instructions
           </button>
 
-          <div className="pt-2">
-            <button type="submit"
-              className="w-44 py-4 rounded-xl bg-[#1A1A2E] text-white text-sm font-semibold hover:bg-[#111] transition-all cursor-pointer">
-              {done ? "Submitted ✓" : "Submit"}
-            </button>
-          </div>
-        </form>
+          <button className="w-full py-4 bg-[#111] text-white rounded-xl text-sm font-semibold hover:bg-[#333] transition-colors cursor-pointer mt-2">
+            Submit
+          </button>
+        </div>
       </div>
     </AppLayout>
   );
