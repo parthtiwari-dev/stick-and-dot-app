@@ -1,286 +1,215 @@
 "use client";
+import { useState, useEffect, useCallback } from "react";
 import AppLayout from "@/components/AppLayout";
-import Footer from "@/components/Footer";
-import { Search, TrendingUp, TrendingDown } from "lucide-react";
+import Link from "next/link";
+import { Clock, ArrowLeft, ArrowRight, Star } from "lucide-react";
 
-const CALENDAR_DAYS = [
-  ["25","26","27","28","29","30","1"],
-  ["2","3","4","5","6","7","8"],
-  ["9","10","11","12","13","14","15"],
-  ["16","17","18","19","20","21","22"],
-  ["23","24","25","26","27","28","29"],
-  ["30","31","1","2","3","4","5"],
+const CARDS = [
+  { id:"1", title:"The Silent Revolution in Neural Computing", author:"Shaivya Saini", mins:"8",  tag:"Technology", rating:4.8, views:"12.4K" },
+  { id:"2", title:"How Minimalism Took Over the Design World", author:"Shaivya Saini", mins:"5",  tag:"Design",     rating:4.5, views:"9.1K"  },
+  { id:"3", title:"The Hidden Economics of Attention",         author:"Shaivya Saini", mins:"12", tag:"Finance",    rating:4.9, views:"18.7K" },
+  { id:"4", title:"Why Slow Reading Is Making a Comeback",     author:"Shaivya Saini", mins:"6",  tag:"Culture",    rating:4.3, views:"7.2K"  },
+  { id:"5", title:"Building Products People Actually Love",    author:"Shaivya Saini", mins:"9",  tag:"Business",   rating:4.7, views:"14.0K" },
 ];
 
-export default function BusinessDashboard() {
+const CARD_STYLES = [
+  { bg:"#0f0a1e", blob1:"#7c3aed", blob2:"#c026d3", blob3:"#4f46e5" },
+  { bg:"#071520", blob1:"#0ea5e9", blob2:"#6366f1", blob3:"#06b6d4" },
+  { bg:"#150f00", blob1:"#ca8a04", blob2:"#ea580c", blob3:"#84cc16" },
+  { bg:"#031212", blob1:"#0d9488", blob2:"#0891b2", blob3:"#4ade80" },
+  { bg:"#160606", blob1:"#dc2626", blob2:"#db2777", blob3:"#f97316" },
+];
+
+function MeshCard({ card, style, size }: {
+  card: typeof CARDS[0];
+  style: typeof CARD_STYLES[0];
+  size: "sm" | "lg";
+}) {
+  const h = size === "lg" ? 400 : 300;
   return (
-    <AppLayout bg="bg-[#F4F4F4]">
-      <div className="p-6 min-h-screen">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Profile</p>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, Shaivya</h1>
-            <p className="text-sm text-gray-500">Your Dashboard Preview</p>
+    <div className="relative rounded-3xl overflow-hidden select-none w-full"
+      style={{ height: h, background: style.bg }}>
+      {/* Mesh blobs */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute rounded-full opacity-45 blur-3xl"
+          style={{ width:240, height:240, background:style.blob1, top:-80, left:-60 }} />
+        <div className="absolute rounded-full opacity-30 blur-3xl"
+          style={{ width:200, height:200, background:style.blob2, bottom:0, right:-50 }} />
+        <div className="absolute rounded-full opacity-20 blur-2xl"
+          style={{ width:160, height:160, background:style.blob3, top:"50%", left:"50%" }} />
+      </div>
+      {/* Noise */}
+      <div className="absolute inset-0 opacity-[0.035]"
+        style={{ backgroundImage:"url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")" }} />
+
+      {/* Badges */}
+      <div className="absolute top-4 left-4 flex items-center gap-2">
+        <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white/70 text-xs px-3 py-1 rounded-full">
+          {card.tag}
+        </span>
+      </div>
+      {size === "lg" && (
+        <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/20 text-white/70 text-xs px-3 py-1.5 rounded-full">
+          <Clock size={10} />{card.mins} min
+        </div>
+      )}
+
+      {/* Stats pill — only on lg */}
+      {size === "lg" && (
+        <div className="absolute bottom-20 right-4 flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5">
+            <Star size={10} fill="#F97316" className="text-[#F97316]" />
+            <span className="text-white/80 text-xs font-semibold">{card.rating}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex gap-2">
-              <button className="bg-[#111] text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer">Today</button>
-              <button className="bg-white border border-gray-200 text-gray-600 text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-50">Select Date</button>
-              <button className="bg-white border border-gray-200 text-gray-600 text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-50 flex items-center gap-1">
-                <span>▼</span> Filter
-              </button>
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-40">
-              <Search size={13} /><span>Search</span>
-            </div>
+          <div className="bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5">
+            <span className="text-white/60 text-xs">{card.views} views</span>
           </div>
         </div>
+      )}
 
-        {/* Top Row: Profile Card + Stat Cards */}
-        <div className="grid grid-cols-3 gap-4 mt-5 mb-4">
-          {/* Profile Card */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 row-span-2">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-2xl flex-shrink-0">👤</div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 text-sm">Jerome Bell</p>
-                <p className="text-xs text-gray-400">Marketing Coordinator</p>
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/60 to-transparent pt-12">
+        <h3 className={`text-white font-bold leading-snug mb-2 ${size === "lg" ? "text-lg" : "text-sm"}`}>
+          {card.title}
+        </h3>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">
+            {card.author[0]}
+          </div>
+          <span className="text-white/55 text-xs">{card.author}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function PortfolioPage() {
+  const [active, setActive] = useState(0);
+
+  const prev = useCallback(() => setActive(i => (i - 1 + CARDS.length) % CARDS.length), []);
+  const next = useCallback(() => setActive(i => (i + 1) % CARDS.length), []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft")  prev();
+      if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [prev, next]);
+
+  const leftIdx  = (active - 1 + CARDS.length) % CARDS.length;
+  const rightIdx = (active + 1) % CARDS.length;
+  const current  = CARDS[active];
+
+  return (
+    <AppLayout bg="bg-[#0d0d0d]">
+      <div className="min-h-screen flex flex-col px-4 md:px-8 pt-8 pb-12">
+
+        {/* Header */}
+        <div className="text-center mb-10">
+          <p className="text-white/30 text-xs font-semibold uppercase tracking-widest mb-2">Writer</p>
+          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-2">My Portfolio</h1>
+          <p className="text-white/35 text-sm">{CARDS.length} published articles</p>
+        </div>
+
+        {/* Carousel */}
+        <div className="flex-1 flex flex-col items-center">
+          <div className="relative w-full flex items-center justify-center">
+
+            {/* Prev */}
+            <button onClick={prev}
+              className="flex-shrink-0 z-20 mr-3 md:mr-6 w-11 h-11 rounded-2xl bg-white/8 hover:bg-white/15 border border-white/10 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group">
+              <ArrowLeft size={18} className="text-white/50 group-hover:text-white transition-colors" />
+            </button>
+
+            {/* Cards */}
+            <div className="flex items-center gap-4 md:gap-5 justify-center">
+              {/* Left */}
+              <div onClick={prev} className="hidden sm:block cursor-pointer flex-shrink-0 transition-all duration-500 opacity-35 hover:opacity-55 scale-90 hover:scale-[0.93]"
+                style={{ width: 210 }}>
+                <MeshCard card={CARDS[leftIdx]} style={CARD_STYLES[leftIdx % CARD_STYLES.length]} size="sm" />
               </div>
-              <button className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg text-gray-600 cursor-pointer hover:bg-gray-50">Quick Profile</button>
-            </div>
-            <div className="space-y-1.5 mb-4">
-              {[["Phone","+6081325132288"],["Email","richa@gmail.com"],["Address","Merdeka Street, Wonosobo"]].map(([l,v]) => (
-                <div key={l} className="flex gap-2">
-                  <span className="text-gray-400 text-xs w-16 flex-shrink-0">{l}</span>
-                  <span className="text-gray-700 text-xs">{v}</span>
+
+              {/* Centre featured */}
+              <div className="flex-shrink-0 transition-all duration-500" style={{ width: "min(380px, 90vw)" }}>
+                <Link href={`/articles/${current.id}`}>
+                  <div className="cursor-pointer hover:scale-[1.02] transition-all duration-300"
+                    style={{ filter:"drop-shadow(0 0 50px rgba(255,255,255,0.06))" }}>
+                    <MeshCard card={current} style={CARD_STYLES[active % CARD_STYLES.length]} size="lg" />
+                  </div>
+                </Link>
+
+                {/* Info row below card */}
+                <div className="mt-5 flex items-center justify-between px-1">
+                  <div>
+                    <p className="text-white/70 text-xs font-medium mb-0.5">Published</p>
+                    <p className="text-white/35 text-xs">10 / 2 / 2023</p>
+                  </div>
+                  <Link href={`/articles/${current.id}`}>
+                    <button className="flex items-center gap-2 bg-white text-black text-sm font-bold px-6 py-2.5 rounded-2xl hover:bg-white/90 transition-all cursor-pointer hover:scale-[1.03] active:scale-95">
+                      Read <ArrowRight size={13} />
+                    </button>
+                  </Link>
+                  <div className="text-right">
+                    <p className="text-white/70 text-xs font-medium mb-0.5">Engagement</p>
+                    <p className="text-white/35 text-xs">{current.views} views</p>
+                  </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Right */}
+              <div onClick={next} className="hidden sm:block cursor-pointer flex-shrink-0 transition-all duration-500 opacity-35 hover:opacity-55 scale-90 hover:scale-[0.93]"
+                style={{ width: 210 }}>
+                <MeshCard card={CARDS[rightIdx]} style={CARD_STYLES[rightIdx % CARD_STYLES.length]} size="sm" />
+              </div>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed mb-4">
-              I&apos;m the CEO at Tokopedia. Establishing an application myself to my goal. I want to help...
-            </p>
-            <button className="w-full py-2.5 rounded-xl bg-[#F97316] text-white text-sm font-semibold cursor-pointer hover:bg-[#ea6c0a] transition-colors">
-              Go to Details
+
+            {/* Next */}
+            <button onClick={next}
+              className="flex-shrink-0 z-20 ml-3 md:ml-6 w-11 h-11 rounded-2xl bg-white/8 hover:bg-white/15 border border-white/10 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group">
+              <ArrowRight size={18} className="text-white/50 group-hover:text-white transition-colors" />
             </button>
           </div>
 
-          {/* Stat Cards */}
-          <div className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-3">
-            <div className="text-3xl">🪙</div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Payments</p>
-              <p className="text-2xl font-bold">Rs. XYZ</p>
-              <p className="text-green-400 text-xs flex items-center gap-1"><TrendingUp size={11} /> +39.89%</p>
-            </div>
-          </div>
-          <div className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-3">
-            <div className="text-3xl">📘</div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Words</p>
-              <p className="text-2xl font-bold">XXX</p>
-              <p className="text-red-400 text-xs flex items-center gap-1"><TrendingDown size={11} /> -5.23%</p>
-            </div>
-          </div>
-          <div className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-3">
-            <div className="text-3xl">🧩</div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Engagement</p>
-              <p className="text-2xl font-bold">50%</p>
-              <p className="text-green-400 text-xs flex items-center gap-1"><TrendingUp size={11} /> +39.69%</p>
-            </div>
-          </div>
-          <div className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-3">
-            <div className="text-3xl">📊</div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Words</p>
-              <p className="text-2xl font-bold">XXX</p>
-              <p className="text-red-400 text-xs flex items-center gap-1"><TrendingDown size={11} /> -5.23%</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Task Stats + Sales Overview */}
-        <div className="grid grid-cols-5 gap-4 mb-4">
-          {/* Task Statistic */}
-          <div className="col-span-2 bg-white rounded-2xl p-5 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-gray-900 text-sm">Task Statistic</p>
-              <span className="text-red-400 text-xs flex items-center gap-1"><TrendingDown size={11} /> -3.00%</span>
-            </div>
-            <div className="flex justify-between mb-4">
-              <div className="text-center">
-                <p className="text-xs text-gray-400">Total Task</p>
-                <p className="text-2xl font-bold text-gray-900">476</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-gray-400">Overdue Tasks</p>
-                <p className="text-2xl font-bold text-red-500">23</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-center mb-4">
-              <div className="relative w-32 h-32">
-                <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-                  <circle cx="60" cy="60" r="45" fill="none" stroke="#f3f4f6" strokeWidth="14" />
-                  <circle cx="60" cy="60" r="45" fill="none" stroke="#111" strokeWidth="14"
-                    strokeDasharray="178 283" strokeLinecap="round" />
-                  <circle cx="60" cy="60" r="45" fill="none" stroke="#888" strokeWidth="14"
-                    strokeDasharray="53 283" strokeDashoffset="-178" strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <p className="text-xs text-gray-400">Complete Task</p>
-                  <p className="text-sm font-bold text-gray-900">186 Task</p>
-                </div>
-              </div>
-            </div>
-            {[["Complete Task","186"],["Inprogress Task","47"],["Pending Task","54"]].map(([l,v],idx) => (
-              <div key={idx} className="flex items-center justify-between py-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-gray-800" />
-                  <span className="text-xs text-gray-600">{l}</span>
-                </div>
-                <span className="text-xs font-semibold text-gray-800">{v}</span>
-              </div>
+          {/* Dots */}
+          <div className="flex items-center gap-2 mt-10">
+            {CARDS.map((_, i) => (
+              <button key={i} onClick={() => setActive(i)}
+                className={`rounded-full transition-all duration-300 cursor-pointer ${
+                  i === active ? "w-7 h-2 bg-white" : "w-2 h-2 bg-white/20 hover:bg-white/40"
+                }`} />
             ))}
           </div>
 
-          {/* Sales Overview */}
-          <div className="col-span-3 bg-white rounded-2xl p-5 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-green-500 text-xs flex items-center gap-1"><TrendingUp size={11} /> +4034%</span>
-                <p className="font-semibold text-gray-900 text-sm">Sales Overview</p>
-              </div>
-              <select className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 outline-none text-gray-600 bg-white cursor-pointer">
-                <option>month</option>
-                <option>week</option>
-              </select>
-            </div>
-            <div className="h-44">
-              <svg viewBox="0 0 400 160" className="w-full h-full">
-                <defs>
-                  <linearGradient id="salesGrad1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#111" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#111" stopOpacity="0" />
-                  </linearGradient>
-                  <linearGradient id="salesGrad2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#999" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#999" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                {[20,40,60,80,100].map(y => (
-                  <line key={y} x1="0" y1={y} x2="400" y2={y} stroke="#f3f4f6" strokeWidth="1" />
-                ))}
-                <path d="M0,120 C60,110 80,80 120,70 C160,60 180,90 220,60 C260,30 300,50 340,40 C370,33 390,38 400,35" stroke="#111" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                <path d="M0,120 C60,110 80,80 120,70 C160,60 180,90 220,60 C260,30 300,50 340,40 C370,33 390,38 400,35 L400,160 L0,160 Z" fill="url(#salesGrad1)" />
-                <path d="M0,100 C60,105 80,90 120,95 C160,100 180,70 220,80 C260,90 300,75 340,70 C370,66 390,72 400,70" stroke="#bbb" strokeWidth="2" fill="none" strokeDasharray="5,3" />
-                {["Jan","Feb","Mar","Apr","May","Jun"].map((m,i) => (
-                  <text key={m} x={i*66+20} y="155" fill="#9ca3af" fontSize="9">{m}</text>
-                ))}
-                <text x="5" y="15" fill="#6b7280" fontSize="9">100</text>
-                <text x="5" y="55" fill="#6b7280" fontSize="9">60</text>
-                <text x="5" y="95" fill="#6b7280" fontSize="9">20</text>
-              </svg>
-            </div>
-            <div className="flex gap-4 mt-1">
-              <span className="text-xs text-gray-500 flex items-center gap-1"><span className="w-3 h-0.5 bg-gray-800 inline-block" /> Total Sales</span>
-              <span className="text-xs text-gray-400 flex items-center gap-1"><span className="w-3 h-0.5 bg-gray-400 inline-block border-dashed" /> Total Revenue</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Mini Stats + Calendar + Total Revenue */}
-        <div className="grid grid-cols-5 gap-4 mb-4">
-          {/* Mini Stats */}
-          <div className="col-span-2 grid grid-cols-2 gap-3">
-            {[
-              { id:1, label:"Projects", value:"4,732", change:"+100%", up:true, icon:"📁" },
-              { id:2, label:"Clients",  value:"1,627", change:"-4.8%",  up:false, icon:"👥" },
-              { id:3, label:"Tasks",    value:"3,275", change:"-5%",    up:false, icon:"✅" },
-              { id:4, label:"Employees",value:"6,187", change:"+100%", up:true, icon:"⭐" },
-            ].map(({ label, value, change, up, icon }) => (
-              <div key={label} className="bg-white rounded-2xl p-4 border border-gray-100">
-                <p className="text-xl mb-1">{icon}</p>
-                <p className="text-xs text-gray-400">{label}</p>
-                <p className="text-lg font-bold text-gray-900">{value}</p>
-                <p className={`text-xs flex items-center gap-1 ${up ? "text-green-500" : "text-red-500"}`}>
-                  {up ? <TrendingUp size={10} /> : <TrendingDown size={10} />} {change}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar */}
-          <div className="col-span-1 bg-white rounded-2xl p-4 border border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <p className="font-semibold text-gray-900 text-sm">📅 Calendar</p>
-              <span className="text-xs text-gray-400">October</span>
-            </div>
-            <div className="grid grid-cols-7 gap-0">
-              {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d => (
-                <div key={d} className="text-center text-[9px] text-gray-400 font-medium py-0.5">{d}</div>
-              ))}
-              {CALENDAR_DAYS.flat().map((d, i) => (
-                <div key={i}
-                  className={`text-center text-[10px] py-1 rounded cursor-pointer ${
-                    d === "13" ? "bg-[#111] text-white font-bold" :
-                    ["20","27","29"].includes(d) ? "text-[#F97316] font-semibold" :
-                    d === "" ? "" : "text-gray-700 hover:bg-gray-50"
-                  }`}>{d}</div>
+          {/* Article index list */}
+          <div className="mt-12 w-full max-w-lg">
+            <p className="text-white/25 text-xs font-semibold uppercase tracking-widest mb-4 text-center">All Articles</p>
+            <div className="flex flex-col gap-1">
+              {CARDS.map((c, i) => (
+                <button key={c.id} onClick={() => setActive(i)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer transition-all ${
+                    i === active
+                      ? "bg-white/10 border border-white/15"
+                      : "hover:bg-white/5 border border-transparent"
+                  }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/25 text-xs w-5 text-right font-mono">#{i+1}</span>
+                    <span className={`text-sm font-medium text-left ${i === active ? "text-white" : "text-white/45"}`}>{c.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                    <span className="text-white/25 text-xs">{c.views}</span>
+                    <div className="flex items-center gap-0.5">
+                      <Star size={9} fill="#F97316" className="text-[#F97316]" />
+                      <span className="text-white/35 text-xs">{c.rating}</span>
+                    </div>
+                  </div>
+                </button>
               ))}
             </div>
           </div>
-
-          {/* Total Revenue */}
-          <div className="col-span-2 bg-white rounded-2xl p-5 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-gray-900 text-sm">Total Revenue</p>
-              <select className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none text-gray-600 bg-white cursor-pointer">
-                <option>2022</option>
-                <option>2023</option>
-              </select>
-            </div>
-            <div className="h-32">
-              <svg viewBox="0 0 300 120" className="w-full h-full">
-                {[30,60,90].map(y => (
-                  <line key={y} x1="20" y1={y} x2="300" y2={y} stroke="#f3f4f6" strokeWidth="1" />
-                ))}
-                {[0,1,2,3,4,5].map((i) => {
-                  const heights = [60,85,45,100,70,55];
-                  const x = 30 + i * 44;
-                  const h = heights[i];
-                  return (
-                    <g key={i}>
-                      <rect x={x} y={120-h} width="16" height={h} fill="#111" rx="3" />
-                      <rect x={x+18} y={120-h*0.6} width="16" height={h*0.6} fill="#d1d5db" rx="3" />
-                    </g>
-                  );
-                })}
-                {["Jan","Feb","Mar","Apr","May","Jun"].map((m,i) => (
-                  <text key={m} x={30+i*44+8} y="118" fill="#9ca3af" fontSize="7" textAnchor="middle">{m}</text>
-                ))}
-              </svg>
-            </div>
-            <div className="flex gap-4 mt-1">
-              <span className="text-xs text-gray-500 flex items-center gap-1"><span className="w-3 h-2 bg-gray-800 inline-block rounded-sm" /> Total Income</span>
-              <span className="text-xs text-gray-400 flex items-center gap-1"><span className="w-3 h-2 bg-gray-300 inline-block rounded-sm" /> Total Outcome</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Help Widget */}
-        <div className="bg-[#F97316] rounded-2xl p-4 flex items-center gap-4 max-w-xs">
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white text-xl">💬</div>
-          <div>
-            <p className="text-white text-sm font-semibold">Need help?</p>
-            <p className="text-orange-100 text-xs">Please check our docs</p>
-          </div>
-          <button className="ml-auto bg-white text-orange-600 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors">
-            DOCUMENTATION
-          </button>
         </div>
       </div>
-      <Footer />
     </AppLayout>
   );
 }
