@@ -1,215 +1,181 @@
 "use client";
-
 import { useState } from "react";
-import Link from "next/link";
-import { Home, FileText, Settings, FolderOpen, ChevronLeft, ChevronRight, Play, ArrowRight, Star, Upload, Settings2, X } from "lucide-react";
-import { useParams } from "next/navigation";
+import AppLayout from "@/components/AppLayout";
+import { Star, Upload } from "lucide-react";
 
-const KEYWORDS = ["#technology", "#tech", "#Career"];
-const KEYWORD_PILLS = ["Readability", "Grammar", "AI", "Plagiarism", "WPS", "SPP", "RW"];
+const COMMENTS = [
+  { name: "Shaivya S.", date: "10/2/2023", quality: 4, comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  { name: "Shaivya S.", date: "10/3/2023", quality: 5, comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  { name: "Shaivya S.", date: "10/3/2023", quality: 3, comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  { name: "Shaivya S.", date: "10/4/2023", quality: 4, comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  { name: "Shaivya S.", date: "10/5/2023", quality: 5, comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  { name: "Shaivya S.", date: "10/6/2023", quality: 4, comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  { name: "Shaivya S.", date: "10/7/2023", quality: 4, comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+];
 
-function Sparkline() {
+function StarRating({ count }: { count: number }) {
   return (
-    <svg width="80" height="30" viewBox="0 0 80 30" fill="none">
-      <polyline points="0,25 15,18 25,22 35,12 45,16 55,8 65,12 80,6" stroke="#4ade80" strokeWidth="1.5" fill="none" />
-    </svg>
+    <div className="flex gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <Star key={i} size={12}
+          fill={i <= count ? "#F97316" : "none"}
+          className={i <= count ? "text-[#F97316]" : "text-gray-300"}
+        />
+      ))}
+    </div>
   );
 }
 
-function ArticleContent() {
-  const params = useParams();
+export default function ArticlePage() {
   const [comment, setComment] = useState("");
-  const [rating, setRating] = useState(0);
-
-  const comments = Array(8).fill({ name: "Shaivya S.", date: "10/2/2023", quality: 4, text: "Lorem ipsum dolor Lorem ipsum dolor" });
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   return (
-    <div className="flex min-h-screen bg-white">
-      {/* Narrow icon sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-14 bg-black flex flex-col items-center pt-6 pb-6 gap-2 z-20">
-        <Link href="/dashboard" className="p-2.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors mb-2">
-          <Home size={18} strokeWidth={1.5} />
-        </Link>
-        <Link href="/dashboard" className="p-2.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors">
-          <Home size={18} strokeWidth={1.5} />
-        </Link>
-        <Link href="/articles/article-1" className="p-2.5 rounded-lg bg-white/10 text-white">
-          <FileText size={18} strokeWidth={1.5} />
-        </Link>
-        <Link href="/settings" className="p-2.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors">
-          <Settings size={18} strokeWidth={1.5} />
-        </Link>
-        <Link href="/portfolio" className="p-2.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors">
-          <FolderOpen size={18} strokeWidth={1.5} />
-        </Link>
-        <div className="flex-1" />
-        <button className="p-2.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors">
-          <ChevronRight size={18} strokeWidth={1.5} />
-        </button>
-        <button className="p-2.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors">
-          <ChevronLeft size={18} strokeWidth={1.5} />
-        </button>
-        <button className="p-2.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors">
-          <Play size={16} strokeWidth={1.5} />
-        </button>
-      </aside>
+    <AppLayout>
+      <div className="p-6 max-w-3xl">
+        {/* Article header */}
+        <div className="bg-white rounded-2xl p-8 mb-5 border border-gray-100">
+          <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">
+            The World&apos;s Most Dangerous Technology Ever Made.
+          </h1>
+          <div className="flex items-center justify-center gap-4 text-xs text-gray-400 mb-6">
+            <span>Aditit Andreini — May 3, 2023 • 5 min read</span>
+            <span>Writing With Accorin</span>
+          </div>
 
-      {/* Main article area */}
-      <main className="flex-1 ml-14 max-w-2xl mx-auto px-6 py-8">
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-gray-900 text-center mb-2 leading-tight">
-          The World's Most Dangerous Technology Ever Made.
-        </h1>
-        <p className="text-center text-sm text-gray-400 mb-1">Ralph Hawkins • May 7, 2019 (10 mins read)</p>
-        <p className="text-center text-xs text-gray-400 mb-5">{KEYWORDS.join(" ")}</p>
-
-        {/* Keywords + Engagement widget */}
-        <div className="bg-black rounded-xl p-4 mb-6 relative overflow-hidden">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <p className="text-white text-sm font-semibold mb-1">Suggested Keywords</p>
-              <p className="text-gray-400 text-xs mb-3">#technology #tech #Career</p>
-              <div className="flex flex-wrap gap-2">
-                {KEYWORD_PILLS.map(kw => (
-                  <span key={kw} className="bg-white/10 text-gray-300 text-xs px-3 py-1 rounded-full border border-white/10 hover:bg-white/20 cursor-pointer transition-colors">{kw}</span>
-                ))}
+          {/* Suggested Keywords & Engagement overlay card */}
+          <div className="bg-[#1A1A1A] rounded-2xl p-4 mb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-white text-xs font-semibold mb-2">Suggested Keywords</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {["Automation","Artificial","Reasoning","Algorithms"].map(k => (
+                    <span key={k} className="bg-[#2a2a2a] text-gray-300 text-xs px-3 py-1 rounded-full">{k}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-white text-xs font-semibold mb-1">Engagement</p>
+                <p className="text-white text-3xl font-bold">24K</p>
+                <p className="text-gray-400 text-xs">3,500 contributions in the last year</p>
+                <svg width="120" height="30" viewBox="0 0 120 30" className="mt-1">
+                  <polyline points="0,25 20,20 40,22 60,10 80,14 100,8 120,5"
+                    stroke="#4ade80" strokeWidth="1.5" fill="none"/>
+                </svg>
               </div>
             </div>
-            <div className="text-right ml-4">
-              <div className="flex items-center justify-end gap-2 mb-1">
-                <p className="text-gray-400 text-xs">Engagement</p>
-                <button className="text-gray-500 hover:text-white transition-colors">
-                  <Settings2 size={14} />
-                </button>
+          </div>
+
+          {/* Hero image placeholder */}
+          <div className="w-full h-52 bg-gradient-to-br from-gray-800 to-gray-600 rounded-xl mb-6"/>
+
+          {/* Article body */}
+          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4 text-sm">
+            <p>Curabitur laoreet mi id dui magna aliquam ut. Aliquip con nec labore commodo consectetur dolar. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p>Nisi commodo qui pariatur am sint laboris consequat seisin in offici. Officio iuste occidunt commodo in mollit aliqua from work. Esse enim magna exercitation ullamco amet quis enim. Curabitur voluptate.</p>
+            <p>Nisi commodo qui pariatur am sint laboris consequat seisin in offici. Officio iuste occidunt commodo in mollit aliqua from work. Esse enim magna exercitation ullamco amet quis enim. Curabitur voluptate.</p>
+            <p>Aliquam mollit sunt deleniti ut aut voluptatem et nobis. Offici iure esse amet dolores a sequi deserunt numquam explicabo reprehen ullam soluta Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
+            <p>Magni mollit sunt deleniti ut aut voluptatem et nobis. Offici iure esse amet dolores a sequi deserunt numquam explicabo reprehen ullam soluta Lorem ipsum, dolor sit amet consectetur adipisicing elit Magni mollit sunt deleniti ut aut.</p>
+          </div>
+
+          {/* Author section */}
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">About the Author</p>
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 flex-shrink-0"/>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">Arthur Black</p>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  Lorem adipiscing ut in est est autem amet, iaculis erat. Sed ullamcorper dignissim sapien mauris pharetra dui nisl. Tristique arcu tellus eget et, neque id. Tortor, arcu augue urna erat tincidunt. Dolor sit amet.
+                </p>
               </div>
-              <p className="text-white text-2xl font-bold">2,4K</p>
-              <Sparkline />
-              <p className="text-gray-400 text-[10px]">263 contributions in</p>
-              <p className="text-gray-400 text-[10px]">the last year</p>
             </div>
           </div>
         </div>
 
-        {/* Hero image */}
-        <div className="rounded-xl overflow-hidden mb-6 h-48 bg-gradient-to-br from-gray-700 to-gray-900 relative">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-full h-full bg-gradient-to-br from-gray-600 via-gray-800 to-gray-900 opacity-80" />
-          </div>
-          <div className="absolute bottom-3 right-3 text-gray-400 text-xs">🎸</div>
-        </div>
+        {/* Comments section */}
+        <div className="bg-white rounded-2xl p-8 border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-5">Comments</h2>
 
-        {/* Body text */}
-        <div className="prose prose-sm text-gray-700 leading-relaxed space-y-4 mb-8">
-          <p>Commodo labore ut nisi laborum amet eu qui magna ullamco ut labore. Aliquip consectetur labore consectetur dolor exercitation est minim quis. Magna non irure qui ex est laborum nulla excepteur qui. Anim Lorem dolore cupidatat pariatur ex tempor. Duis ea excepteur proident ex commodo irure est.</p>
-          <p>Nisi commodo qui pariatur enim sint laborum consequat enim in officia. Officia fugiat incididunt commodo et mollit aliqua non aute. Enim dolor eiusmod aliqua amet ipsum in enim eiusmod. Quis exercitation sit velit duis.</p>
-          <p>Est Lorem labore consectetur minim sit eu eiusmod mollit velt. Consectetur voluptate ex amet id eiusmod laborum irure. Aliquip ad qui id exercitation irure amet commodo nisi quis. Occaecat minim incididunt euismod nostrud veniam quis culpa.</p>
-          <p>Aliquip mollit sunt qui irure. Irure ullamco Lorem excepteur dolor qui ea ad quis. Enim fugiat cillum enim ad occaecat sint qui elit labore mollit sunt laborum fugat consequat. Voluptate labore sunt duis eu deserunt. Occaecat do ut ut labore cillum enim dolore ad enim enim id. Aliquip do veniam ad excepteur ad cillum qui deserunt nostrud sunt aliqua duis sunt occaecat. Laborum incididunt commodo ullamco proident quis.</p>
-        </div>
-
-        {/* About the Author */}
-        <div className="mb-8">
-          <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-3">About The Author</p>
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden shrink-0">
-              <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-500" />
-            </div>
-            <div>
-              <p className="font-bold text-gray-900">Arthur Black</p>
-              <p className="text-sm text-gray-400 mb-2">@arthurblack</p>
-              <p className="text-sm text-gray-600 leading-relaxed">Ipsum adipisicing culpa est nisi consequat ex amet magna culpa veniam tempor irure ea. Reprehenderit labore do tempor eiusmod in consectetur ex sunt id mollit commodo ipsum deserunt quis.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Comments */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Comments</h2>
-
-          {/* Add comment */}
-          <div className="mb-4">
-            <h3 className="text-base font-semibold text-gray-800 mb-2">Add a Comment</h3>
-            <div className="flex gap-2">
-              <input
-                type="text"
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-gray-700 mb-3">Add a Comment</p>
+            <div className="border border-gray-200 rounded-xl p-4">
+              <textarea
                 value={comment}
                 onChange={e => setComment(e.target.value)}
                 placeholder="Type your Comment"
-                className="flex-1 border-b border-gray-300 text-sm text-gray-700 outline-none py-2 placeholder-gray-400 focus:border-gray-600 transition-colors bg-transparent"
+                rows={3}
+                className="w-full bg-transparent outline-none text-sm text-gray-800 placeholder:text-gray-400 resize-none"
               />
-              <button className="flex items-center gap-1.5 text-xs text-gray-600 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
-                <Upload size={13} />Upload
-              </button>
-            </div>
-          </div>
-
-          {/* Featured comment bubble */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5 flex items-start gap-3">
-            <div className="flex gap-1 shrink-0">
-              <div className="w-6 h-6 rounded-full bg-yellow-400" />
-              <div className="w-6 h-6 rounded-full bg-gray-800 -ml-2" />
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gray-800 shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-sm text-gray-800 mb-1">Shaivya S.</p>
-              <p className="text-xs text-gray-500 leading-relaxed">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs bg-black text-white px-2 py-0.5 rounded-full">+$XXX</span>
-                <button className="text-gray-400 hover:text-gray-700">→</button>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                <div className="flex gap-1">
+                  {[1,2,3,4,5].map(s => (
+                    <Star key={s} size={16} className="cursor-pointer transition-colors"
+                      fill={s <= (hoverRating || userRating) ? "#F97316" : "none"}
+                      color={s <= (hoverRating || userRating) ? "#F97316" : "#d1d5db"}
+                      onMouseEnter={() => setHoverRating(s)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setUserRating(s)}
+                    />
+                  ))}
+                </div>
+                <button className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors cursor-pointer border border-gray-200 px-3 py-1.5 rounded-lg">
+                  <Upload size={12}/> Upload
+                </button>
               </div>
+            </div>
+
+            {/* Current user comment preview */}
+            <div className="flex gap-3 mt-4">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-orange-500 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">S</div>
+              <div className="flex-1 bg-[#F8F8F8] rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-xs font-semibold text-gray-800">Shaivya S.</p>
+                  <StarRating count={userRating || 4}/>
+                </div>
+                <p className="text-xs text-gray-500">{comment || "Your comment will appear here…"}</p>
+              </div>
+              <button className="self-end text-gray-400 hover:text-gray-700 transition-colors cursor-pointer p-1">→</button>
             </div>
           </div>
 
           {/* Comments table */}
-          <table className="w-full text-sm">
+          <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                {["Name","Date Created","Quality","Comments"].map(h => (
-                  <th key={h} className="text-left py-2 text-xs font-semibold text-gray-500 px-2">{h}</th>
-                ))}
-                <th />
+              <tr>
+                <th className="text-xs text-gray-400 font-medium pb-3 text-left">Name</th>
+                <th className="text-xs text-gray-400 font-medium pb-3 text-left">Date Created</th>
+                <th className="text-xs text-gray-400 font-medium pb-3 text-left">Quality</th>
+                <th className="text-xs text-gray-400 font-medium pb-3 text-left">Comments</th>
+                <th className="pb-3"/>
               </tr>
             </thead>
             <tbody>
-              {comments.map((c, i) => (
-                <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-2">
+              {COMMENTS.map((c, i) => (
+                <tr key={i} className="border-t border-gray-50">
+                  <td className="py-2.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gray-300 shrink-0" />
-                      <span className="text-xs text-gray-700">{c.name}</span>
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-300 to-orange-500 flex items-center justify-center text-white text-xs">S</div>
+                      <span className="text-xs text-gray-700 font-medium">{c.name}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-2 text-xs text-gray-500">{c.date}</td>
-                  <td className="py-3 px-2">
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map(s => <Star key={s} size={11} className={s <= c.quality ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />)}
-                    </div>
-                  </td>
-                  <td className="py-3 px-2 text-xs text-gray-500">{c.text}</td>
-                  <td className="py-3 px-2">
-                    {i === 0 && (
-                      <button className="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center text-gray-400 hover:border-gray-600 hover:text-gray-700 transition-colors">
-                        <X size={12} />
-                      </button>
-                    )}
+                  <td className="py-2.5 text-xs text-gray-500">{c.date}</td>
+                  <td className="py-2.5"><StarRating count={c.quality}/></td>
+                  <td className="py-2.5 text-xs text-gray-500 max-w-xs truncate">{c.comment}</td>
+                  <td className="py-2.5">
+                    <button className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer text-lg leading-none">×</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {/* Submit */}
-          <button
-            onClick={() => setComment("")}
-            className="mt-6 bg-black text-white text-sm font-semibold px-8 py-3 rounded-lg hover:bg-gray-800 active:scale-[0.99] transition-all duration-200"
-          >
+          <button className="w-full mt-6 py-3 rounded-xl bg-[#111] text-white text-sm font-semibold hover:bg-[#333] transition-all cursor-pointer">
             Submit
           </button>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
-}
-
-export default function ArticlePage() {
-  return <ArticleContent />;
 }

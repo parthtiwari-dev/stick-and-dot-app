@@ -1,90 +1,77 @@
 "use client";
-
 import { useState } from "react";
+import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import AppLayout from "@/components/AppLayout";
 
-const CARD_GRADIENTS = [
-  "#8c7a6b",
-  "#5c5c5c",
-  "#7a6a5a",
-  "#4a4a4a",
-  "#6a6060",
-];
-
+const TAGS = ["#hashtag", "#hashtag", "#hashtag", "#hashtag"];
 const ARTICLES = [
-  { id: 1, title: "Title Name", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididu...", tags: ["Tag", "Tag"], author: "NAME AUTHOR/BUSINESS", color: CARD_GRADIENTS[0], slug: "article-1" },
-  { id: 2, title: "Title Name", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididu...", tags: ["Tag", "Tag"], author: "NAME AUTHOR/BUSINESS", color: CARD_GRADIENTS[1], slug: "article-2" },
-  { id: 3, title: "Title Name", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididu...", tags: ["Tag", "Tag"], author: "NAME AUTHOR/BUSINESS", color: CARD_GRADIENTS[2], slug: "article-3", featured: true },
-  { id: 4, title: "Title Name", desc: "Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididu...", tags: ["Tag"], author: "NAME AUTHOR/BUSINESS", color: CARD_GRADIENTS[3], slug: "article-4" },
-  { id: 5, title: "Title Name", desc: "Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididu...", tags: ["Tag"], author: "NAME AUTHOR/BUSINESS", color: CARD_GRADIENTS[4], slug: "article-5" },
+  { id: "1", title: "Title Name", author: "NAME AUTHOR/BUSINESS", excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
+  { id: "2", title: "Title Name", author: "NAME AUTHOR/BUSINESS", excerpt: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip." },
+  { id: "3", title: "Title Name", author: "NAME AUTHOR/BUSINESS", excerpt: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat." },
 ];
 
-function ExploreContent() {
-  const [query, setQuery] = useState("");
-
+function ArticleCard({ article, featured }: { article: typeof ARTICLES[0]; featured?: boolean }) {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Dark header hero */}
-      <div className="bg-black px-8 pt-10 pb-8 flex flex-col items-center gap-5">
-        {/* Top search bar */}
-        <div className="self-end flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-sm text-gray-400 w-56">
-          <Search size={14} className="text-gray-500" /><span>Search</span>
+    <Link href={`/articles/${article.id}`}>
+      <div className={`bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow border border-gray-100 ${featured?"ring-2 ring-[#F97316]":""}`}>
+        <div className="h-40 bg-gradient-to-br from-[#9b8ea8] to-[#c4b5c9] relative">
+          {featured && <div className="absolute top-2 right-2 bg-[#F97316] text-white text-xs px-2 py-0.5 rounded-full">1 min read</div>}
         </div>
-        <h1 className="text-4xl font-bold text-white tracking-wide">Explore</h1>
-        <div className="w-full max-w-2xl relative">
-          <Search size={17} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Explore with Keywords/Topics/Authors"
-            className="w-full rounded-full bg-white/5 border border-white/15 text-sm text-gray-200 placeholder-gray-500 pl-12 pr-6 py-4 outline-none focus:border-white/30 transition-colors"
-          />
+        <div className="p-4">
+          <p className="font-semibold text-gray-900 text-sm mb-1">{article.title}</p>
+          <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+            <span className="w-4 h-4 rounded-full bg-gray-200 inline-block"/>
+            {article.author}
+          </p>
+          {featured && <p className="text-xs text-gray-500 leading-relaxed mb-3">{article.excerpt}</p>}
+          {featured && <button className="text-xs text-gray-700 font-semibold hover:text-black transition-colors cursor-pointer">Read Now →</button>}
         </div>
       </div>
-
-      {/* Articles carousel */}
-      <div className="px-6 py-8 overflow-x-auto">
-        <div className="flex gap-4 min-w-max mx-auto">
-          {ARTICLES.map((article, i) => {
-            const isFeatured = article.featured;
-            return (
-              <Link key={article.id} href={`/articles/${article.slug}`}
-                className={`flex flex-col bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer ${isFeatured ? "w-80 -mt-6 shadow-xl z-10" : "w-56"}`}
-              >
-                {/* Thumbnail */}
-                <div className="rounded-xl m-3 mb-0" style={{ background: article.color, height: isFeatured ? 200 : 150 }} />
-                {/* Content */}
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className={`font-bold text-gray-900 mb-2 ${isFeatured ? "text-lg" : "text-base"}`}>{article.title}</h3>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-3 flex-1">{article.desc}</p>
-                  <div className="flex gap-2 mb-3">
-                    {article.tags.map((tag, ti) => (
-                      <span key={ti} className="bg-black text-white text-[10px] font-medium px-3 py-1 rounded-full">{tag}</span>
-                    ))}
-                  </div>
-                  {isFeatured && (
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                      <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
-                      <span className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold">{article.author}</span>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+    </Link>
   );
 }
 
 export default function ExplorePage() {
+  const [query, setQuery] = useState("");
+  const [searched, setSearched] = useState(false);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) setSearched(true);
+  };
+
   return (
-    <AppLayout sidebarCollapsed={false}>
-      <ExploreContent />
+    <AppLayout>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">Explore</h1>
+
+        <form onSubmit={handleSearch} className="flex justify-center mb-6">
+          <div className="relative w-full max-w-xl">
+            <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"/>
+            <input
+              type="text" value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="Explore with Keywords, Topics, Authors…"
+              className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white outline-none focus:border-gray-400 text-sm text-gray-800 shadow-sm"
+            />
+          </div>
+        </form>
+
+        {searched && (
+          <>
+            <p className="text-sm text-gray-500 text-center mb-4">Showing search results for <strong className="text-gray-800">"{query}"</strong></p>
+            <div className="flex gap-2 justify-center mb-6 flex-wrap">
+              {TAGS.map((t,i) => (
+                <button key={i} className="bg-white border border-gray-200 text-gray-600 text-xs px-4 py-1.5 rounded-full hover:bg-gray-50 cursor-pointer">{t}</button>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div className="grid grid-cols-3 gap-4">
+          {ARTICLES.map((a, i) => <ArticleCard key={a.id} article={a} featured={i===1}/>)}
+        </div>
+      </div>
     </AppLayout>
   );
 }
