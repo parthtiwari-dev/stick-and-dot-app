@@ -1,10 +1,48 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 
-const TAGS = ["#hashtags","#hashtags","#hashtags","#hashtags"];
+type Role = "writer" | "business" | "reader" | "subject-expert";
+
+function storageRole(): Role {
+  try {
+    const r = localStorage.getItem("sd_role");
+    if (r === "Reader") return "reader";
+    if (r === "Client") return "business";
+    if (r === "Subject Expert") return "subject-expert";
+    if (r === "Writer") return "writer";
+  } catch (_) {}
+  return "reader";
+}
+
+const ROLE_CONFIG: Record<Role, {
+  title: string;
+  placeholder: string;
+  tags: string[];
+}> = {
+  reader: {
+    title: "Explore",
+    placeholder: "Explore with Keywords/Topics/Authors",
+    tags: ["#technology", "#design", "#science", "#career"],
+  },
+  writer: {
+    title: "Discover Trending Topics",
+    placeholder: "Search trending topics, niches, keywords...",
+    tags: ["#trending", "#technology", "#finance", "#health"],
+  },
+  business: {
+    title: "Explore Content",
+    placeholder: "Search content, writers, topics...",
+    tags: ["#marketing", "#business", "#growth", "#strategy"],
+  },
+  "subject-expert": {
+    title: "Explore Research",
+    placeholder: "Search research papers, topics, domains...",
+    tags: ["#research", "#analysis", "#insights", "#domain"],
+  },
+};
 
 const CARDS = [
   { id: "1", title: "Title Name", author: "NAME AUTHOR/BUSINESS", mins: "X" },
@@ -21,19 +59,21 @@ const GRADIENTS = [
 function ArticleCard({ card, featured }: { card: typeof CARDS[0]; featured?: boolean }) {
   return (
     <Link href={`/articles/${card.id}`}>
-      <div className={`relative cursor-pointer transition-all duration-300 ${featured ? "scale-105 z-10 shadow-2xl" : "opacity-80 hover:opacity-100 hover:scale-102"}`}>
-        <div className={`relative rounded-2xl overflow-hidden bg-gradient-to-br ${GRADIENTS[parseInt(card.id)-1]}`}
-          style={{ height: featured ? 340 : 300 }}>
+      <div className={`relative cursor-pointer transition-all duration-300 ${featured ? "scale-105 z-10 shadow-2xl" : "opacity-80 hover:opacity-100"}`}>
+        <div
+          className={`relative rounded-2xl overflow-hidden bg-gradient-to-br ${GRADIENTS[parseInt(card.id) - 1]}`}
+          style={{ height: featured ? 340 : 300 }}
+        >
           {featured && (
             <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-sm">
-              <Clock size={11}/>{card.mins} mins read
+              <Clock size={11} />{card.mins} mins read
             </div>
           )}
           <div className="absolute bottom-12 left-0 right-0 px-5">
-            <h3 className="text-gray-900 text-2xl font-bold drop-shadow-sm">{card.title}</h3>
+            <h3 className="text-gray-900 text-2xl font-bold">{card.title}</h3>
           </div>
           <div className="absolute bottom-4 left-5 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-white/80 flex-shrink-0"/>
+            <div className="w-7 h-7 rounded-full bg-white/80 flex-shrink-0" />
             <span className="text-gray-800 text-xs font-medium">{card.author}</span>
           </div>
         </div>
@@ -55,21 +95,30 @@ function ArticleCard({ card, featured }: { card: typeof CARDS[0]; featured?: boo
 export default function ExplorePage() {
   const [query, setQuery] = useState("");
   const [searched, setSearched] = useState(true);
+  const [role, setRole] = useState<Role>("reader");
+
+  useEffect(() => {
+    setRole(storageRole());
+  }, []);
+
+  const config = ROLE_CONFIG[role];
 
   return (
     <AppLayout bg="bg-white">
       <div className="p-4 md:p-8 min-h-screen">
-        {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-6">Explore</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-6">{config.title}</h1>
 
-        {/* Search */}
         <div className="flex justify-center mb-5">
           <div className="relative w-full max-w-2xl">
-            <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"/>
-            <input type="text" value={query} onChange={e=>setQuery(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&setSearched(true)}
-              placeholder="Explore with Keywords/Topics/Authors"
-              className="w-full pl-12 pr-5 py-4 rounded-full border border-gray-200 text-gray-800 placeholder:text-gray-400 outline-none focus:border-gray-400 text-sm bg-gray-50 transition-colors"/>
+            <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && setSearched(true)}
+              placeholder={config.placeholder}
+              className="w-full pl-12 pr-5 py-4 rounded-full border border-gray-200 text-gray-800 placeholder:text-gray-400 outline-none focus:border-gray-400 text-sm bg-gray-50 transition-colors"
+            />
           </div>
         </div>
 
@@ -79,25 +128,26 @@ export default function ExplorePage() {
               Showing search results for <span className="text-gray-900 font-bold italic">&apos;KEYWORD&apos;</span>
             </p>
             <div className="flex flex-wrap gap-3 justify-center mb-8">
-              {TAGS.map((t,i) => (
-                <button key={i} className="border border-gray-300 text-gray-600 text-sm px-5 py-2 rounded-full hover:bg-gray-50 cursor-pointer transition-colors">{t}</button>
+              {config.tags.map((t, i) => (
+                <button key={i} className="border border-gray-300 text-gray-600 text-sm px-5 py-2 rounded-full hover:bg-gray-50 cursor-pointer transition-colors">
+                  {t}
+                </button>
               ))}
             </div>
           </>
         )}
 
-        {/* Carousel */}
         <div className="relative flex items-center gap-2">
           <button className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center cursor-pointer transition-colors z-10">
-            <ChevronLeft size={18} className="text-gray-700"/>
+            <ChevronLeft size={18} className="text-gray-700" />
           </button>
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-6 items-start overflow-hidden">
             {CARDS.map((card, i) => (
-              <ArticleCard key={card.id} card={card} featured={i===1} />
+              <ArticleCard key={card.id} card={card} featured={i === 1} />
             ))}
           </div>
           <button className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center cursor-pointer transition-colors z-10">
-            <ChevronRight size={18} className="text-gray-700"/>
+            <ChevronRight size={18} className="text-gray-700" />
           </button>
         </div>
       </div>

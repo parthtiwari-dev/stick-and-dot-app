@@ -7,7 +7,7 @@ const FOLLOW  = ["Instagram","Twitter","Linkedin","Dribble"];
 export default function Footer() {
   return (
     <footer className="bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-white mt-0">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 items-start">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-6 grid grid-cols-2 md:grid-cols-4 gap-5 items-start">
         {/* Logo */}
         <div>
           <p className="text-base font-bold underline underline-offset-4 mb-1">LOGO</p>
@@ -15,23 +15,23 @@ export default function Footer() {
         </div>
         {/* Explore */}
         <div className="md:border-l md:border-gray-600 md:pl-8">
-          <p className="font-semibold text-sm mb-4">Explore</p>
+          <p className="font-semibold text-sm mb-3">Explore</p>
           {EXPLORE.map((l,i) => (
-            <Link key={i} href="#" className="block text-sm text-gray-400 hover:text-white mb-2 transition-colors">{l}</Link>
+            <Link key={i} href="#" className="block text-sm text-gray-400 hover:text-white mb-1.5 transition-colors">{l}</Link>
           ))}
         </div>
         {/* Blogs */}
         <div className="md:border-l md:border-gray-600 md:pl-8">
-          <p className="font-semibold text-sm mb-4">Blogs</p>
+          <p className="font-semibold text-sm mb-3">Blogs</p>
           {BLOGS.map((l,i) => (
-            <Link key={i} href="#" className="block text-sm text-gray-400 hover:text-white mb-2 transition-colors">{l}</Link>
+            <Link key={i} href="#" className="block text-sm text-gray-400 hover:text-white mb-1.5 transition-colors">{l}</Link>
           ))}
         </div>
         {/* Follow */}
         <div className="md:border-l md:border-gray-600 md:pl-8">
-          <p className="font-semibold text-sm mb-4">Follow</p>
+          <p className="font-semibold text-sm mb-3">Follow</p>
           {FOLLOW.map((l,i) => (
-            <Link key={i} href="#" className="block text-sm text-gray-400 hover:text-white mb-2 transition-colors">{l}</Link>
+            <Link key={i} href="#" className="block text-sm text-gray-400 hover:text-white mb-1.5 transition-colors">{l}</Link>
           ))}
         </div>
       </div>
