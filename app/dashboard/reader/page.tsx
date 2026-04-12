@@ -1,4 +1,5 @@
 "use client";
+import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 import Footer from "@/components/Footer";
 import { Search, TrendingUp, TrendingDown } from "lucide-react";
@@ -9,14 +10,8 @@ const ARTICLES = [
   { rank: 3, name: "Article Name", rating: 4, views: "1.2K Views" },
 ];
 
-const PROJECTS = [
-  { name: "Finalize Ist Version", progress: 65, budget: "$14,000", completion: "65%" },
-  { name: "Add Progress Track",   progress: 10, budget: "$5,000",  completion: "10%" },
-  { name: "Fix Platform Errors",  progress: 10, budget: "Refund",  completion: "10%" },
-  { name: "Update the Mobile App",progress: 100,budget: "$52,500", completion: "100%" },
-  { name: "Add the Pricing Page", progress: 5,  budget: "$400",    completion: "5%" },
-  { name: "Redesign New Online Shop",progress: 45, budget: "$7,000", completion: "45%" },
-];
+const STREAK_DAYS = ["M","T","W","T","F","S","S"];
+const STREAK_READ = [true, true, true, false, true, true, false];
 
 const BOOKMARKS = [
   { name: "Article Name", pct: 90 },
@@ -34,6 +29,7 @@ const CALENDAR_DAYS = [
 ];
 
 export default function ReaderDashboard() {
+  const { userName } = useUser();
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-6 min-h-screen">
@@ -41,7 +37,7 @@ export default function ReaderDashboard() {
         <div className="flex items-center justify-between mb-1">
           <div>
             <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Profile</p>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, Shaivya</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
             <p className="text-sm text-gray-500">Your Dashboard Preview</p>
           </div>
           <div className="flex items-center gap-3">
@@ -125,7 +121,7 @@ export default function ReaderDashboard() {
           </div>
         </div>
 
-        {/* Calendar + Projects */}
+        {/* Calendar + Reading Streak */}
         <div className="grid grid-cols-5 gap-4 mb-4">
           {/* Calendar */}
           <div className="col-span-2 bg-white rounded-2xl p-5 border border-gray-100">
@@ -150,34 +146,39 @@ export default function ReaderDashboard() {
             </div>
           </div>
 
-          {/* Projects */}
+          {/* Reading Streak */}
           <div className="col-span-3 bg-white rounded-2xl p-5 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-gray-900 text-sm">Projects</p>
-              <span className="text-green-500 text-xs flex items-center gap-1"><TrendingUp size={11} /> +20.89%</span>
+              <p className="font-semibold text-gray-900 text-sm">🔥 Reading Streak</p>
+              <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-lg">This Week</span>
             </div>
-            <div className="grid grid-cols-4 gap-2 mb-2">
-              {["Overview","Leaders","Joiners","Completed"].map(h => (
-                <p key={h} className="text-xs text-gray-400 font-medium">{h}</p>
+            <div className="flex items-end gap-3 mb-6">
+              <p className="text-5xl font-bold text-gray-900">5</p>
+              <div className="mb-1">
+                <p className="text-sm font-semibold text-gray-700">day streak</p>
+                <p className="text-xs text-gray-400">Keep it going!</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mb-6">
+              {STREAK_DAYS.map((d, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div className={`w-full h-8 rounded-lg ${STREAK_READ[i] ? "bg-[#111]" : "bg-gray-100"}`} />
+                  <span className="text-xs text-gray-400">{d}</span>
+                </div>
               ))}
             </div>
-            {PROJECTS.map(p => (
-              <div key={p.name} className="grid grid-cols-4 gap-2 items-center py-2 border-b border-gray-50 last:border-0">
-                <p className="text-xs text-gray-700 font-medium col-span-1">{p.name}</p>
-                <div className="flex -space-x-1">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-300 to-orange-600 border-2 border-white" />
-                  ))}
+            <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4">
+              {[
+                { label: "Articles This Month", value: "14" },
+                { label: "Avg. Daily Reading",  value: "22 min" },
+                { label: "Longest Streak",      value: "12 days" },
+              ].map(({ label, value }) => (
+                <div key={label} className="text-center">
+                  <p className="text-xl font-bold text-gray-900">{value}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{label}</p>
                 </div>
-                <p className="text-xs text-gray-600">{p.budget}</p>
-                <div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-[#111] h-1.5 rounded-full" style={{width: p.completion}} />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5">{p.completion}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 

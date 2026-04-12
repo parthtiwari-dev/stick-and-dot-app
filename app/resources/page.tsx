@@ -1,20 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
+import { rawToDash, getStoredRole } from "@/lib/roles";
 import AppLayout from "@/components/AppLayout";
 import { BookOpen, PenLine, Briefcase, FlaskConical } from "lucide-react";
 
 type Role = "writer" | "business" | "reader" | "subject-expert";
 
-function storageRole(): Role {
-  try {
-    const r = localStorage.getItem("sd_role");
-    if (r === "Reader") return "reader";
-    if (r === "Client") return "business";
-    if (r === "Subject Expert") return "subject-expert";
-    if (r === "Writer") return "writer";
-  } catch (_) {}
-  return "reader";
-}
+function storageRole(): Role { return rawToDash(getStoredRole()) as Role; }
 
 const ROLE_RESOURCES: Record<Role, {
   icon: React.ComponentType<{ size?: number; className?: string }>;

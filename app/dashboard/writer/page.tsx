@@ -1,4 +1,5 @@
 "use client";
+import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 import Footer from "@/components/Footer";
 import { Search, Star, TrendingUp, TrendingDown } from "lucide-react";
@@ -50,6 +51,7 @@ const PERF_ITEMS = [
 ];
 
 export default function WriterDashboard() {
+  const { userName } = useUser();
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-4 md:p-6 min-h-screen">
@@ -58,7 +60,7 @@ export default function WriterDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
           <div>
             <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Profile</p>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Welcome, Shaivya</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
             <p className="text-sm text-gray-500">Your Dashboard Preview</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -104,7 +106,7 @@ export default function WriterDashboard() {
           <div className="ml-auto flex items-center gap-3 bg-[#2A2A2A] rounded-xl px-4 py-3">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex-shrink-0"/>
             <div>
-              <p className="text-white text-sm font-semibold">Shaivya S.</p>
+              <p className="text-white text-sm font-semibold">{userName}</p>
               <p className="text-gray-400 text-xs">Lorem ipsum dolor sit amet</p>
               <p className="text-gray-500 text-xs">+XXX</p>
             </div>
@@ -286,6 +288,44 @@ export default function WriterDashboard() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* My Commissions */}
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 mb-4">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <p className="text-base font-semibold text-gray-900">My Commissions</p>
+              <p className="text-xs text-gray-400 mt-0.5">Articles assigned to you by businesses</p>
+            </div>
+            <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg">3 Active</span>
+          </div>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-100">
+                {["Article Brief","Business","Deadline","Budget","Status"].map(h => (
+                  <th key={h} className="text-xs text-gray-400 font-medium pb-3 text-left">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { brief:"The Future of EVs in India",         business:"GreenMiles Co.",  deadline:"Apr 20",  budget:"₹4,500", status:"In Progress", color:"text-blue-500"  },
+                { brief:"Top 10 Finance Hacks for Gen-Z",     business:"MoneyMind Media", deadline:"Apr 24",  budget:"₹3,200", status:"Not Started",  color:"text-gray-400"  },
+                { brief:"AI in Healthcare: What Doctors Say", business:"MedScope Inc.",   deadline:"Apr 30",  budget:"₹6,000", status:"In Progress", color:"text-blue-500"  },
+                { brief:"Sustainable Fashion on a Budget",    business:"TrendLoop",       deadline:"May 5",   budget:"₹2,800", status:"Under Review", color:"text-orange-500"},
+              ].map((c, i) => (
+                <tr key={i} className="border-b border-gray-50 last:border-0">
+                  <td className="py-3 text-sm text-gray-800 font-medium max-w-[200px]">{c.brief}</td>
+                  <td className="py-3 text-sm text-gray-500">{c.business}</td>
+                  <td className="py-3 text-sm text-gray-500">{c.deadline}</td>
+                  <td className="py-3 text-sm text-gray-700 font-semibold">{c.budget}</td>
+                  <td className="py-3">
+                    <span className={`text-xs font-semibold ${c.color}`}>{c.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
       </div>

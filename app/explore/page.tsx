@@ -4,18 +4,10 @@ import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search, Clock, ArrowLeft, ArrowRight, X } from "lucide-react";
 
+import { rawToDash, getStoredRole } from "@/lib/roles";
 type Role = "writer" | "business" | "reader" | "subject-expert";
 
-function storageRole(): Role {
-  try {
-    const r = localStorage.getItem("sd_role");
-    if (r === "Reader") return "reader";
-    if (r === "Client") return "business";
-    if (r === "Subject Expert") return "subject-expert";
-    if (r === "Writer") return "writer";
-  } catch (_) {}
-  return "reader";
-}
+function storageRole(): Role { return rawToDash(getStoredRole()) as Role; }
 
 const ROLE_CONFIG: Record<Role, { title: string; placeholder: string; tags: string[] }> = {
   reader:           { title: "Explore",                  placeholder: "Explore with Keywords, Topics or Authors…", tags: ["#technology","#design","#science","#career","#culture"] },

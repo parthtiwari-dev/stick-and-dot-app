@@ -1,4 +1,5 @@
 "use client";
+import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search, Edit2 } from "lucide-react";
@@ -16,6 +17,7 @@ const FAVOURITE_AUTHORS = [
 ];
 
 export default function ReaderProfile() {
+  const { userName } = useUser();
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-4 md:p-6">
@@ -36,7 +38,7 @@ export default function ReaderProfile() {
           <div className="bg-white rounded-2xl p-6 border border-gray-100 w-full lg:w-[280px] flex-shrink-0">
             <div className="flex flex-col items-center mb-5">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-4xl mb-3">👤</div>
-              <p className="text-gray-900 font-semibold text-base">Shaivya Saini</p>
+              <p className="text-gray-900 font-semibold text-base">{userName}</p>
               <p className="text-gray-500 text-xs mb-1">Avid Reader</p>
               <p className="text-gray-400 text-xs">@shaivyasaini</p>
             </div>

@@ -1,24 +1,15 @@
 "use client";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-
-type Role = "Writer" | "Reader" | "Subject Expert" | "Client";
-const ROLES: Role[] = ["Writer", "Reader", "Subject Expert", "Client"];
-
-function dashPath(r: Role) {
-  return r === "Reader" ? "/dashboard/reader"
-       : r === "Subject Expert" ? "/dashboard/subject-expert"
-       : r === "Client" ? "/dashboard/business"
-       : "/dashboard/writer";
-}
+import Logo from "@/components/Logo";
+import { type RawRole, RAW_ROLES, dashRootPath } from "@/lib/roles";
 
 const inp = "w-full border-b border-gray-300 bg-transparent outline-none focus:border-black py-2 text-sm text-gray-900 placeholder:text-gray-400 transition-colors";
 
 function Inner() {
   const router = useRouter();
   const sp = useSearchParams();
-  const role = (sp.get("role") as Role) || "Writer";
+  const role = (sp.get("role") as RawRole) || "Writer";
   const email = sp.get("email") || "";
   const [form, setForm] = useState({ name: "", mobile: "", domain: "", gender: "", dob: "" });
   const [loading, setLoading] = useState(false);
@@ -28,10 +19,10 @@ function Inner() {
   const go = (name: string) => {
     try {
       localStorage.setItem("sd_role", role);
-      if (name) localStorage.setItem("sd_name", name);
+      if (name)  localStorage.setItem("sd_name", name);
       if (email) localStorage.setItem("sd_email", email);
     } catch (_) {}
-    router.push(dashPath(role));
+    router.push(dashRootPath(role));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,11 +36,13 @@ function Inner() {
   return (
     <div className="flex min-h-screen">
       <aside className="hidden md:flex flex-col fixed top-0 left-0 h-screen w-[42%] bg-black text-white px-10 py-10 z-10 select-none">
-        <div className="mb-auto"><span className="text-2xl font-bold">Logo</span></div>
+        <div className="mb-auto">
+          <Logo size="lg" theme="dark" />
+        </div>
         <div className="flex flex-col justify-center flex-1">
           <p className="text-lg mb-6 leading-snug">Present <strong>yourself</strong> as...</p>
           <div className="flex flex-col gap-3">
-            {ROLES.map(r => (
+            {RAW_ROLES.map(r => (
               <button key={r} onClick={() => router.push(`/signup?role=${encodeURIComponent(r)}`)}
                 className={`w-full py-3 px-6 rounded-lg border text-sm font-medium transition-all cursor-pointer text-left ${
                   role === r ? "bg-white text-black border-white" : "bg-transparent text-white border-white/50 hover:bg-white/10"
@@ -60,15 +53,15 @@ function Inner() {
             For your personalized Dashboard<br />choose from the above.
           </p>
         </div>
-        <div className="text-center mt-auto">
-          <p className="text-xl font-bold underline underline-offset-4">Stick&amp;Dot.</p>
+        <div className="mt-auto">
+          <Logo size="sm" theme="dark" />
         </div>
       </aside>
 
       <main className="w-full md:ml-[42%] md:w-[58%] min-h-screen bg-white overflow-y-auto">
         <header className="flex justify-end items-center gap-8 px-10 py-5">
-          <Link href="#" className="text-sm text-gray-500 hover:text-black">Community</Link>
-          <Link href="#" className="text-sm text-gray-500 hover:text-black">About</Link>
+          <a href="/community" className="text-sm text-gray-500 hover:text-black">Community</a>
+          <a href="/about" className="text-sm text-gray-500 hover:text-black">About</a>
         </header>
         <nav className="px-10 mb-4">
           <p className="text-sm text-gray-400">Signup&gt;{role}&gt;OTP&gt;<span className="text-gray-700">Details</span></p>

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const EXPLORE = ["Dashboard","About Us","Our Team","Contact us"];
 const BLOGS   = ["Newsroom","Lorem Ipsum","Lorem Ipsum","Downloads"];
-const FOLLOW  = ["Instagram","Twitter","Linkedin","Dribble"];
+const FOLLOW  = ["Instagram","Twitter","Linkedin","Dribbble"];
 
 export default function Footer() {
   return (

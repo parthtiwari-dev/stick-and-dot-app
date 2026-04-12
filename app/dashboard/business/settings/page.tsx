@@ -1,4 +1,5 @@
 "use client";
+import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 import { Search } from "lucide-react";
 
@@ -22,13 +23,14 @@ const InfoRow = ({ label, value }: { label: string; value: string }) => (
 );
 
 export default function BusinessSettings() {
+  const { userName } = useUser();
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-4 md:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
             <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Profile</p>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Welcome, Shaivya</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
           </div>
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-44">
             <Search size={13} /><span>Search</span>

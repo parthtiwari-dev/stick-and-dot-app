@@ -1,4 +1,5 @@
 "use client";
+import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 import Footer from "@/components/Footer";
 import { Search, TrendingUp, TrendingDown } from "lucide-react";
@@ -13,6 +14,7 @@ const CALENDAR_DAYS = [
 ];
 
 export default function BusinessDashboard() {
+  const { userName } = useUser();
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-6 min-h-screen">
@@ -20,7 +22,7 @@ export default function BusinessDashboard() {
         <div className="flex items-center justify-between mb-1">
           <div>
             <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Profile</p>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, Shaivya</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
             <p className="text-sm text-gray-500">Your Dashboard Preview</p>
           </div>
           <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { getStoredRole } from "@/lib/roles";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -67,7 +68,7 @@ export default function PortfolioPage() {
 
   useEffect(() => {
     try {
-      const r = localStorage.getItem("sd_role");
+      const r = getStoredRole();
       if (r === "Writer" || r === "Subject Expert") { setAllowed(true); }
       else { router.replace("/dashboard/reader"); }
     } catch (_) { router.replace("/login"); }
