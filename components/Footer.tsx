@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 const EXPLORE = ["Dashboard","About Us","Our Team","Contact us"];
 const BLOGS   = ["Newsroom","Lorem Ipsum","Lorem Ipsum","Downloads"];
@@ -9,9 +10,8 @@ export default function Footer() {
     <footer className="bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-white mt-0">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-6 grid grid-cols-2 md:grid-cols-4 gap-5 items-start">
         {/* Logo */}
-        <div>
-          <p className="text-base font-bold underline underline-offset-4 mb-1">LOGO</p>
-          <p className="text-lg font-bold underline underline-offset-4">Stick&amp;Dot.</p>
+        <div className="px-5 pb-2">
+          <Logo size="sm" theme="dark" />
         </div>
         {/* Explore */}
         <div className="md:border-l md:border-gray-600 md:pl-8">
