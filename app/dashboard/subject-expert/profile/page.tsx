@@ -77,7 +77,7 @@ export default function SubjectExpertProfile() {
           <div className="flex-1 bg-white rounded-2xl p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-5">
               <p className="text-gray-900 font-semibold">Recent Reviews</p>
-              <Link href="/dashboard/subject-expert/create" className="text-xs text-gray-400 hover:text-gray-700">Submit New</Link>
+              <Link href="/dashboard/subject-expert/explore" className="text-xs text-gray-400 hover:text-gray-700">Submit New</Link>
             </div>
             <div className="flex flex-col gap-4">
               {REVIEWS.map((r, i) => (

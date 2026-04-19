@@ -76,7 +76,7 @@ export default function WriterProfile() {
           <div className="flex-1 bg-white rounded-2xl p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-5">
               <p className="text-gray-900 font-semibold">Published Articles</p>
-              <Link href="/portfolio" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">View Portfolio</Link>
+              <Link href="/dashboard/writer/portfolio" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">View Portfolio</Link>
             </div>
             <div className="flex flex-col gap-4">
               {ARTICLES.map((a, i) => (
@@ -96,7 +96,7 @@ export default function WriterProfile() {
               ))}
             </div>
             <div className="mt-4">
-              <Link href="/portfolio">
+              <Link href="/dashboard/writer/portfolio">
                 <button className="w-full py-3 rounded-xl bg-[#111] text-white text-sm font-semibold hover:bg-[#333] transition-colors cursor-pointer">
                   View Full Portfolio
                 </button>

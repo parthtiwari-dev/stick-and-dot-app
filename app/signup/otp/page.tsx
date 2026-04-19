@@ -69,7 +69,7 @@ function Inner() {
 
       <main className="w-full md:ml-[42%] md:w-[58%] min-h-screen bg-white overflow-y-auto">
         <header className="flex justify-end items-center gap-8 px-10 py-5">
-          <a href="/community" className="text-sm text-gray-500 hover:text-black">Community</a>
+          <a href="/about" className="text-sm text-gray-500 hover:text-black">Community</a>
           <a href="/about" className="text-sm text-gray-500 hover:text-black">About</a>
         </header>
         <nav className="px-10 mb-4">

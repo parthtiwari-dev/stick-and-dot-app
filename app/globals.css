@@ -1,3 +1,15 @@
 @import "tailwindcss";
 * { box-sizing: border-box; }
 input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+
+/* Hide scrollbar utility (used in mobile role selectors) */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Immersive editor: placeholder shown when contenteditable is empty */
+[contenteditable][data-placeholder]:empty:before {
+  content: attr(data-placeholder);
+  color: #d1d5db;
+  pointer-events: none;
+  display: block;
+}

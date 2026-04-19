@@ -1,98 +1,101 @@
 "use client";
 import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
-import { Search } from "lucide-react";
 
-const CLIENTS = [
-  { name:"Daffa Naufal", role:"Ceo at Google",    email:"daffanaufal@gmail.com",  phone:"+6212345678",  id:"GGL-001" },
-  { name:"Shakir Ramzi", role:"Ceo at Garena",    email:"shakirramzi@gmail.com",  phone:"+6223467890",  id:"GRN-002" },
-  { name:"Zara Annisa",  role:"Ceo at Bukalapak", email:"annisasara@gmail.com",   phone:"+6234567890",  id:"BKL-003" },
-  { name:"Chris Evans",  role:"Ceo at Amazon",    email:"chrisevans@gmail.com",   phone:"+6245678901",  id:"AMZ-004" },
-  { name:"Jack Miller",  role:"Ceo at Dana",      email:"jackmiller@gmail.com",   phone:"+6256789012",  id:"DAN-005" },
-  { name:"Richard Kyle", role:"Ceo at Bibit",     email:"ricardkyle@gmail.com",   phone:"+6267890123",  id:"BIT-006" },
-  { name:"John Wich",    role:"Ceo at Shopee",    email:"johnwhich@gmail.com",    phone:"+627890123",   id:"SHP-007" },
-  { name:"Brian Dawn",   role:"Ceo at Lazada",    email:"briandawn@gmail.com",    phone:"+6289012345",  id:"LZD-008" },
-  { name:"James Wayn",   role:"Ceo at Gojek",     email:"jameswayn@gmail.com",    phone:"+6290123456",  id:"GJK-009" },
-];
-const InfoRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex gap-2 py-1.5 border-b border-gray-50 last:border-0">
-    <span className="text-gray-400 text-xs w-20 flex-shrink-0">{label}</span>
-    <span className="text-gray-700 text-xs">{value}</span>
-  </div>
-);
+const DOMAINS = ["Technology","Finance","Medical / Health","Law","Science","Engineering","Education","Business","Culture","Other"];
 
 export default function SubjectExpertSettings() {
   const { userName } = useUser();
   return (
     <AppLayout bg="bg-[#F4F4F4]">
-      <div className="p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div>
-            <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Settings</p>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
+      <div className="p-4 md:p-6 max-w-2xl">
+        <div className="mb-6">
+          <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Settings</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Settings</h1>
+        </div>
+
+        {/* Profile */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-4">
+          <p className="text-sm font-semibold text-gray-800 mb-5">Profile</p>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-400 to-green-500 flex items-center justify-center text-2xl flex-shrink-0">👤</div>
+            <div>
+              <p className="text-gray-900 font-semibold">{userName || "Your Name"}</p>
+              <p className="text-gray-500 text-xs mt-0.5">Subject Matter Expert</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-44">
-            <Search size={13}/><span>Search</span>
+          <div className="flex flex-col gap-5">
+            {[
+              { label:"Full Name",     placeholder:"Your full name",     type:"text" },
+              { label:"Email Address", placeholder:"your@email.com",     type:"email" },
+              { label:"New Password",  placeholder:"Leave blank to keep current", type:"password" },
+            ].map(({ label, placeholder, type }) => (
+              <div key={label}>
+                <label className="block text-xs text-gray-500 mb-1">{label}</label>
+                <input type={type} placeholder={placeholder}
+                  className="w-full border-b border-gray-200 bg-transparent outline-none focus:border-gray-800 py-2 text-sm text-gray-800 placeholder:text-gray-300 transition-colors"/>
+              </div>
+            ))}
+          </div>
+          <button className="mt-5 px-5 py-2.5 bg-[#111] text-white text-xs font-semibold rounded-xl hover:bg-[#333] cursor-pointer transition-colors">
+            Save Profile
+          </button>
+        </div>
+
+        {/* Domain of Expertise */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-4">
+          <p className="text-sm font-semibold text-gray-800 mb-1">Domain of Expertise</p>
+          <p className="text-xs text-gray-400 mb-4">Select the fields you can review articles in</p>
+          <div className="flex flex-wrap gap-2">
+            {DOMAINS.map((d, i) => (
+              <button key={d}
+                className={`px-4 py-2 rounded-full text-xs font-medium border cursor-pointer transition-colors ${
+                  [0,2].includes(i) ? "bg-[#111] text-white border-[#111]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                }`}>
+                {d}
+              </button>
+            ))}
+          </div>
+          <button className="mt-5 px-5 py-2.5 bg-[#111] text-white text-xs font-semibold rounded-xl hover:bg-[#333] cursor-pointer transition-colors">
+            Save Domain
+          </button>
+        </div>
+
+        {/* Credentials */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-4">
+          <p className="text-sm font-semibold text-gray-800 mb-1">Credentials</p>
+          <p className="text-xs text-gray-400 mb-4">Upload your degree, certification, or proof of expertise</p>
+          <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-gray-400 transition-colors">
+            <p className="text-gray-400 text-sm mb-1">Click to upload a document</p>
+            <p className="text-gray-300 text-xs">PDF, DOC, JPG up to 10MB</p>
+            <input type="file" className="hidden"/>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs bg-green-50 text-green-600 border border-green-100 px-2.5 py-1 rounded-full">✓ Current: Medical_Degree.pdf</span>
           </div>
         </div>
-        <div className="flex flex-col lg:flex-row gap-5">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 w-full lg:w-[280px] flex-shrink-0">
-            <p className="text-sm font-semibold text-gray-800 mb-0.5">Clients Now</p>
-            <p className="text-xs text-gray-400 mb-5">Give the best service to get him to subscribe</p>
-            <div className="flex flex-col items-center mb-5">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-4xl mb-3">👤</div>
-              <p className="text-gray-900 font-semibold">Richard Tyson</p>
-              <p className="text-gray-500 text-xs">Ceo at Tokopedia</p>
-              <p className="text-gray-500 text-xs">Employees ID : CLT - 001</p>
-            </div>
-            <div className="space-y-0.5 mb-4">
-              <InfoRow label="Phone"    value="+6281325132288" />
-              <InfoRow label="Email"    value="richardtyson@gmail.com" />
-              <InfoRow label="Address"  value="Merdeka Street, Wonosobo" />
-              <InfoRow label="Password" value="•••••••" />
-              <InfoRow label="Bank"     value="•••••••" />
-              <InfoRow label="IFSC code" value="•••••••" />
-            </div>
-            <p className="text-sm font-semibold text-gray-800 mb-1 mt-3">Description</p>
-            <p className="text-xs text-gray-400 leading-relaxed mb-5">I&apos;m the CEO at Tokopedia. Establishing an application myself to my goal, I want to help…</p>
-            <button className="w-full py-3 rounded-xl bg-[#F97316] text-white text-sm font-semibold cursor-pointer hover:bg-[#ea6c0a] transition-colors">Edit Details</button>
-          </div>
-          <div className="flex-1 bg-white rounded-2xl p-6 border border-gray-100 overflow-x-auto">
-            <div className="flex justify-between items-center mb-5">
-              <p className="text-gray-900 text-base font-semibold">My Clients</p>
-              <div className="flex gap-2">
-                <select className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 outline-none text-gray-600 bg-white cursor-pointer"><option>All Data</option></select>
-                <select className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 outline-none text-gray-600 bg-white cursor-pointer"><option>August</option></select>
+
+        {/* Payout */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+          <p className="text-sm font-semibold text-gray-800 mb-1">Payout Details</p>
+          <p className="text-xs text-gray-400 mb-4">Where you receive your review earnings</p>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label:"Bank Name",    placeholder:"e.g. SBI, HDFC" },
+              { label:"Account No.", placeholder:"•••• •••• 1234" },
+              { label:"IFSC Code",   placeholder:"e.g. SBIN0001234" },
+              { label:"UPI ID",      placeholder:"yourname@upi" },
+            ].map(({ label, placeholder }) => (
+              <div key={label}>
+                <label className="block text-xs text-gray-500 mb-1">{label}</label>
+                <input type="text" placeholder={placeholder}
+                  className="w-full border-b border-gray-200 bg-transparent outline-none focus:border-gray-800 py-2 text-sm text-gray-800 placeholder:text-gray-300 transition-colors"/>
               </div>
-            </div>
-            <table className="w-full min-w-[500px]">
-              <thead><tr>{["Name","Email","Phone Number","Employees ID"].map(h=><th key={h} className="text-xs text-gray-400 font-medium pb-3 text-left">{h}</th>)}</tr></thead>
-              <tbody>
-                {CLIENTS.map(c=>(
-                  <tr key={c.id} className="border-t border-gray-50">
-                    <td className="py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-orange-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{c.name[0]}</div>
-                        <div><p className="text-sm text-gray-800 font-medium">{c.name}</p><p className="text-xs text-gray-400">{c.role}</p></div>
-                      </div>
-                    </td>
-                    <td className="py-3 text-sm text-gray-500">{c.email}</td>
-                    <td className="py-3 text-sm text-gray-500">{c.phone}</td>
-                    <td className="py-3 text-sm text-gray-500">{c.id}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 pt-4 border-t border-gray-100 gap-2">
-              <p className="text-xs text-gray-400">Showing 1 to 9 of 90 entries</p>
-              <div className="flex gap-1">
-                <button className="text-xs text-gray-400 px-3 py-1 rounded-lg hover:bg-gray-100 cursor-pointer">Previous</button>
-                <button className="text-xs bg-[#F97316] text-white px-3 py-1 rounded-lg cursor-pointer">1</button>
-                <button className="text-xs text-gray-400 px-3 py-1 rounded-lg hover:bg-gray-100 cursor-pointer">2</button>
-                <button className="text-xs text-gray-400 px-3 py-1 rounded-lg hover:bg-gray-100 cursor-pointer">Next</button>
-              </div>
-            </div>
+            ))}
           </div>
+          <button className="mt-5 px-5 py-2.5 bg-[#111] text-white text-xs font-semibold rounded-xl hover:bg-[#333] cursor-pointer transition-colors">
+            Save Payout Info
+          </button>
         </div>
       </div>
     </AppLayout>

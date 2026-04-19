@@ -76,7 +76,7 @@ export default function ReaderProfile() {
             <div className="bg-white rounded-2xl p-6 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-gray-900 font-semibold">My Reading Lists</p>
-                <Link href="/dashboard/reader/create" className="text-xs text-gray-400 hover:text-gray-700">+ New List</Link>
+                <Link href="/dashboard/reader/reading-list" className="text-xs text-gray-400 hover:text-gray-700">+ New List</Link>
               </div>
               <div className="flex flex-col gap-3">
                 {READING_LISTS.map(l => (

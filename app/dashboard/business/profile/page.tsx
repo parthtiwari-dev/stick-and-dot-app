@@ -72,7 +72,7 @@ export default function BusinessProfile() {
           <div className="flex-1 bg-white rounded-2xl p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-5">
               <p className="text-gray-900 font-semibold">Active Commissions</p>
-              <Link href="/leads" className="text-xs text-gray-400 hover:text-gray-700">View All</Link>
+              <Link href="/dashboard/business/writers" className="text-xs text-gray-400 hover:text-gray-700">View All</Link>
             </div>
             <div className="flex flex-col gap-4">
               {ACTIVE_ORDERS.map((o, i) => (
@@ -92,7 +92,7 @@ export default function BusinessProfile() {
               ))}
             </div>
             <div className="mt-5">
-              <Link href="/dashboard/business/create">
+              <Link href="/dashboard/business/commission">
                 <button className="w-full py-3 rounded-xl bg-[#111] text-white text-sm font-semibold hover:bg-[#333] transition-colors cursor-pointer">
                   + New Commission
                 </button>

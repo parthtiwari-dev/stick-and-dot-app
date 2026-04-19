@@ -1,7 +1,6 @@
 "use client";
 import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
-import Footer from "@/components/Footer";
 import { Search, Star, TrendingUp, TrendingDown } from "lucide-react";
 
 function Stars({ n }: { n: number }) {
@@ -16,38 +15,17 @@ function Stars({ n }: { n: number }) {
 
 const FEEDBACK_ROWS = [
   { name:"Shaivya S.", date:"10/2/2023", quality:5, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
-  { name:"Shaivya S.", date:"10/2/2023", quality:4, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
-  { name:"Shaivya S.", date:"10/2/2023", quality:5, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
-  { name:"Shaivya S.", date:"10/2/2023", quality:4, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
-  { name:"Shaivya S.", date:"10/2/2023", quality:5, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
-  { name:"Shaivya S.", date:"10/2/2023", quality:4, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
-  { name:"Shaivya S.", date:"10/2/2023", quality:5, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
-  { name:"Shaivya S.", date:"10/2/2023", quality:4, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
+  { name:"Priya M.",  date:"10/2/2023", quality:4, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
+  { name:"Ravi K.",   date:"10/2/2023", quality:5, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
+  { name:"Anjali T.", date:"10/2/2023", quality:4, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
+  { name:"Arjun D.",  date:"10/2/2023", quality:5, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
+  { name:"Neha S.",   date:"10/2/2023", quality:4, feedback:"Lorem ipsum dolor Lorem ipsum dolor", article:"Article Name" },
 ];
 
 const TOP_ARTICLES = [
   { rank:1, name:"Article Name", rating:5, views:"12K Views" },
-  { rank:2, name:"Article Name", rating:4, views:"12K Views" },
-  { rank:3, name:"Article Name", rating:4, views:"12K Views" },
-];
-
-const CATEGORIES = [
-  { id:1, name:"Category Name", popularity:"10.1K", icon:"🔖" },
-  { id:2, name:"Category Name", popularity:"10.1K", icon:"💡" },
-  { id:3, name:"Category Name", popularity:"10.1K", icon:"📋" },
-];
-
-const AUDIENCE_ITEMS = [
-  { id:1, label:"Lorem Ipsum" },
-  { id:2, label:"Lorem Ipsum" },
-  { id:3, label:"Lorem Ipsum" },
-  { id:4, label:"Lorem Ipsum" },
-];
-
-const PERF_ITEMS = [
-  { id:1, label:"Impressions", value:"12k" },
-  { id:2, label:"Likes",       value:"12k" },
-  { id:3, label:"Feedbacks",   value:"12k" },
+  { rank:2, name:"Article Name", rating:4, views:"9K Views"  },
+  { rank:3, name:"Article Name", rating:4, views:"7K Views"  },
 ];
 
 export default function WriterDashboard() {
@@ -73,12 +51,12 @@ export default function WriterDashboard() {
           </div>
         </div>
 
-        {/* Stat Cards */}
+        {/* Stat Cards — Words Written / Words Pending / Payment Received */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           {[
-            { label:"Payments",   value:"Rs. XYZ", icon:"🪙", change:"+39.89%", up:true  },
-            { label:"Words",      value:"XXX",     icon:"📘", change:"-5.23%",  up:false },
-            { label:"Engagement", value:"50%",     icon:"🧩", change:"+39.69%", up:true  },
+            { label:"Words Written", value:"24,810", icon:"📘", change:"+12.4%",  up:true  },
+            { label:"Words Pending", value:"3,200",  icon:"✍️", change:"-5.23%",  up:false },
+            { label:"Payment Received", value:"₹18,500", icon:"🪙", change:"+39.89%", up:true  },
           ].map(({ label, value, icon, change, up }) => (
             <div key={label} className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-4">
               <div className="text-3xl">{icon}</div>
@@ -91,27 +69,6 @@ export default function WriterDashboard() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Feedback Banner */}
-        <div className="bg-[#1A1A1A] rounded-2xl p-5 mb-4 flex flex-wrap items-center gap-4">
-          <div className="text-3xl">💰</div>
-          <div>
-            <p className="text-3xl font-bold text-white">12k</p>
-            <p className="text-xs text-gray-400">Feedbacks</p>
-          </div>
-          <div className="flex gap-0.5 ml-2">
-            {[1,2,3,4,5].map(i => <Star key={i} size={18} fill="#F97316" className="text-[#F97316]"/>)}
-          </div>
-          <div className="ml-auto flex items-center gap-3 bg-[#2A2A2A] rounded-xl px-4 py-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex-shrink-0"/>
-            <div>
-              <p className="text-white text-sm font-semibold">{userName}</p>
-              <p className="text-gray-400 text-xs">Lorem ipsum dolor sit amet</p>
-              <p className="text-gray-500 text-xs">+XXX</p>
-            </div>
-            <button className="text-gray-400 hover:text-white ml-2 cursor-pointer text-lg">→</button>
-          </div>
         </div>
 
         {/* Top Articles + Trends */}
@@ -134,6 +91,7 @@ export default function WriterDashboard() {
               </div>
             ))}
           </div>
+
           <div className="lg:col-span-3 bg-[#1A1A1A] rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -164,118 +122,24 @@ export default function WriterDashboard() {
           </div>
         </div>
 
-        {/* Engagement + Top Category + Audience */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {/* Engagement */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-900">📈 Engagement</p>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">This Week</span>
-            </div>
-            <div className="flex gap-6 mb-3">
-              <div><p className="text-xs text-gray-400">This Week</p><p className="text-green-500 font-bold text-sm">+20%</p></div>
-              <div><p className="text-xs text-gray-400">Last Week</p><p className="text-red-500 font-bold text-sm">-10%</p></div>
-            </div>
-            <p className="text-xs text-gray-500 mb-2">Impressions</p>
-            <div className="flex items-end gap-1 h-12">
-              {[40,55,35,60,45,70,50].map((h,i) => (
-                <div key={i} className={`flex-1 rounded-sm ${i===4?"bg-[#111]":"bg-gray-200"}`} style={{height:`${h}%`}}/>
-              ))}
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-xs text-gray-400">TOTAL</span>
-              <span className="text-xs text-gray-400">+15</span>
-              <span className="text-xs text-gray-400">1.2k</span>
-            </div>
-          </div>
-
-          {/* Top Category - fixed unique keys */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-900">📊 Top Category</p>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">This Week</span>
-            </div>
-            {CATEGORIES.map(c => (
-              <div key={c.id} className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0">
-                <span className="text-xl">{c.icon}</span>
-                <div>
-                  <p className="text-sm text-gray-800 font-medium">{c.name}</p>
-                  <p className="text-xs text-gray-400">Popularity: {c.popularity}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Audience - fixed unique keys */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-900">Audience</p>
-              <button className="text-xs text-gray-400 hover:text-gray-700 cursor-pointer">Details</button>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col gap-2 flex-1">
-                {AUDIENCE_ITEMS.map((item, i) => (
-                  <div key={item.id} className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{background:["#111","#555","#999","#ccc"][i]}}/>
-                    <span className="text-xs text-gray-500">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="relative w-24 h-24 flex-shrink-0">
-                <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-                  <circle cx="40" cy="40" r="28" fill="none" stroke="#f3f4f6" strokeWidth="16"/>
-                  <circle cx="40" cy="40" r="28" fill="none" stroke="#111" strokeWidth="16" strokeDasharray="52 124"/>
-                  <circle cx="40" cy="40" r="28" fill="none" stroke="#555" strokeWidth="16" strokeDasharray="35 141" strokeDashoffset="-52"/>
-                  <circle cx="40" cy="40" r="28" fill="none" stroke="#999" strokeWidth="16" strokeDasharray="25 151" strokeDashoffset="-87"/>
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-xs font-bold text-gray-800">Total</span>
-                  <span className="text-sm font-bold text-gray-900">xyz</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Feedback Section */}
+        {/* Reader Feedback Table */}
         <div className="bg-white rounded-2xl p-5 border border-gray-100 mb-4">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Feedback</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-            <div className="sm:col-span-2 bg-[#1A1A1A] rounded-xl p-5">
-              <p className="text-white text-sm font-semibold text-center mb-3">Your Recent Performance</p>
-              <div className="flex justify-around divide-x divide-gray-700">
-                {PERF_ITEMS.map(item => (
-                  <div key={item.id} className="text-center flex-1 px-2">
-                    <p className="text-2xl font-bold text-white">{item.value}</p>
-                    <p className="text-xs text-gray-400">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-[#1A1A1A] rounded-xl p-5 flex flex-col items-center justify-center">
-              <p className="text-white text-sm font-semibold mb-1">Overall</p>
-              <p className="text-3xl font-bold text-white">4.5/5</p>
-              <div className="flex gap-0.5 mt-1">
-                {[1,2,3,4,5].map(i=><Star key={i} size={14} fill={i<=4?"#F97316":"none"} className={i<=4?"text-[#F97316]":"text-gray-600"}/>)}
-              </div>
-            </div>
-          </div>
-
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Reader Feedback</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-gray-100">
-                  {["Name","Date Created","Quality","Feedback","Article"].map(h=>(
+                  {["Name","Date","Quality","Feedback","Article"].map(h=>(
                     <th key={h} className="text-xs text-gray-400 font-medium pb-3 text-left">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {FEEDBACK_ROWS.map((r, i) => (
-                  <tr key={i} className="border-b border-gray-50">
+                  <tr key={i} className="border-b border-gray-50 last:border-0">
                     <td className="py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">S</div>
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{r.name[0]}</div>
                         <span className="text-sm text-gray-700 font-medium">{r.name}</span>
                       </div>
                     </td>
@@ -290,46 +154,7 @@ export default function WriterDashboard() {
           </div>
         </div>
 
-        {/* My Commissions */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 mb-4">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p className="text-base font-semibold text-gray-900">My Commissions</p>
-              <p className="text-xs text-gray-400 mt-0.5">Articles assigned to you by businesses</p>
-            </div>
-            <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg">3 Active</span>
-          </div>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100">
-                {["Article Brief","Business","Deadline","Budget","Status"].map(h => (
-                  <th key={h} className="text-xs text-gray-400 font-medium pb-3 text-left">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { brief:"The Future of EVs in India",         business:"GreenMiles Co.",  deadline:"Apr 20",  budget:"₹4,500", status:"In Progress", color:"text-blue-500"  },
-                { brief:"Top 10 Finance Hacks for Gen-Z",     business:"MoneyMind Media", deadline:"Apr 24",  budget:"₹3,200", status:"Not Started",  color:"text-gray-400"  },
-                { brief:"AI in Healthcare: What Doctors Say", business:"MedScope Inc.",   deadline:"Apr 30",  budget:"₹6,000", status:"In Progress", color:"text-blue-500"  },
-                { brief:"Sustainable Fashion on a Budget",    business:"TrendLoop",       deadline:"May 5",   budget:"₹2,800", status:"Under Review", color:"text-orange-500"},
-              ].map((c, i) => (
-                <tr key={i} className="border-b border-gray-50 last:border-0">
-                  <td className="py-3 text-sm text-gray-800 font-medium max-w-[200px]">{c.brief}</td>
-                  <td className="py-3 text-sm text-gray-500">{c.business}</td>
-                  <td className="py-3 text-sm text-gray-500">{c.deadline}</td>
-                  <td className="py-3 text-sm text-gray-700 font-semibold">{c.budget}</td>
-                  <td className="py-3">
-                    <span className={`text-xs font-semibold ${c.color}`}>{c.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
       </div>
-      <Footer/>
     </AppLayout>
   );
 }

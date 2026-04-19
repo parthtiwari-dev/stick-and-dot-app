@@ -1,109 +1,103 @@
 "use client";
 import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
-import { Search } from "lucide-react";
-
-const CLIENTS = [
-  { name:"Daffa Naufal", role:"Ceo at Google",    email:"daffanaufal@gmail.com",  phone:"+6212345678",  id:"GGL-001" },
-  { name:"Shakir Ramzi", role:"Ceo at Garena",    email:"shakirramzi@gmail.com",  phone:"+6223467890",  id:"GRN-002" },
-  { name:"Zara Annisa",  role:"Ceo at Bukalapak", email:"annisasara@gmail.com",   phone:"+6234567890",  id:"BKL-003" },
-  { name:"Chris Evans",  role:"Ceo at Amazon",    email:"chrisevans@gmail.com",   phone:"+6245678901",  id:"AMZ-004" },
-  { name:"Jack Miller",  role:"Ceo at Dana",      email:"jackmiller@gmail.com",   phone:"+6256789012",  id:"DAN-005" },
-  { name:"Richard Kyle", role:"Ceo at Bibit",     email:"ricardkyle@gmail.com",   phone:"+6267890123",  id:"BIT-006" },
-  { name:"John Wich",    role:"Ceo at Shopee",    email:"johnwhich@gmail.com",    phone:"+627890123",   id:"SHP-007" },
-  { name:"Brian Dawn",   role:"Ceo at Lazada",    email:"briandawn@gmail.com",    phone:"+6289012345",  id:"LZD-008" },
-  { name:"James Wayn",   role:"Ceo at Gojek",     email:"jameswayn@gmail.com",    phone:"+6290123456",  id:"GJK-009" },
-];
-
-const InfoRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-start gap-2 py-1.5 border-b border-gray-50 last:border-0">
-    <span className="text-gray-400 text-xs w-20 flex-shrink-0">{label}</span>
-    <span className="text-gray-700 text-xs">{value}</span>
-  </div>
-);
 
 export default function ReaderSettings() {
   const { userName } = useUser();
+
   return (
     <AppLayout bg="bg-[#F4F4F4]">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Settings</p>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
-          </div>
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-44">
-            <Search size={13} /><span>Search</span>
-          </div>
+      <div className="p-4 md:p-6 max-w-2xl">
+
+        <div className="mb-6">
+          <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Settings</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Settings</h1>
         </div>
-        <div className="flex gap-5">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 w-[280px] flex-shrink-0">
-            <p className="text-sm font-semibold text-gray-800 mb-0.5">Clients Now</p>
-            <p className="text-xs text-gray-400 mb-5">Give the best service to get him to subscribe</p>
-            <div className="flex flex-col items-center mb-5">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-4xl mb-3">
-                <span>👤</span>
+
+        {/* Profile */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-4">
+          <p className="text-sm font-semibold text-gray-800 mb-5">Profile</p>
+
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-2xl flex-shrink-0">👤</div>
+            <div>
+              <p className="text-gray-900 font-semibold">{userName || "Your Name"}</p>
+              <p className="text-gray-500 text-xs mt-0.5">Reader</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-5">
+            {[
+              { label:"Full Name",    placeholder:userName || "Your name",      type:"text"  },
+              { label:"Email",        placeholder:"your@email.com",             type:"email" },
+              { label:"Mobile",       placeholder:"+91 00000 00000",            type:"tel"   },
+            ].map(({ label, placeholder, type }) => (
+              <div key={label}>
+                <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
+                <input type={type} defaultValue="" placeholder={placeholder}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 bg-white placeholder:text-gray-300 transition-colors"/>
               </div>
-              <p className="text-gray-900 font-semibold">Richard Tyson</p>
-              <p className="text-gray-500 text-xs">Ceo at Tokopedia</p>
-              <p className="text-gray-500 text-xs">Employees ID : CLT - 001</p>
-            </div>
-            <div className="space-y-0.5 mb-4">
-              <InfoRow label="Phone" value="+6281325132288" />
-              <InfoRow label="Email" value="richardtyson@gmail.com" />
-              <InfoRow label="Address" value="Merdeka Street, Wonosobo" />
-              <InfoRow label="Password" value="•••••••" />
-              <InfoRow label="Bank" value="•••••••" />
-              <InfoRow label="IFSC code" value="•••••••" />
-            </div>
-            <p className="text-sm font-semibold text-gray-800 mb-1 mt-3">Description</p>
-            <p className="text-xs text-gray-400 leading-relaxed mb-5">I&apos;m the CEO at Tokopedia. Establishing an application myself to my goal, I want to help…</p>
-            <button className="w-full py-3 rounded-xl bg-[#F97316] text-white text-sm font-semibold cursor-pointer hover:bg-[#ea6c0a] transition-colors">
-              Edit Details
+            ))}
+            <button className="w-full py-3 rounded-xl bg-[#111] text-white text-sm font-semibold hover:bg-[#333] transition-colors cursor-pointer">
+              Save Changes
             </button>
           </div>
-          <div className="flex-1 bg-white rounded-2xl p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-5">
-              <p className="text-gray-900 text-base font-semibold">My Clients</p>
-              <div className="flex gap-2">
-                <select className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 outline-none text-gray-600 bg-white cursor-pointer"><option>All Data</option></select>
-                <select className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 outline-none text-gray-600 bg-white cursor-pointer"><option>August</option></select>
+        </div>
+
+        {/* Password */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-4">
+          <p className="text-sm font-semibold text-gray-800 mb-5">Password</p>
+          <div className="flex flex-col gap-5">
+            {["Current Password","New Password","Confirm New Password"].map(label => (
+              <div key={label}>
+                <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
+                <input type="password" placeholder="••••••••"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-gray-400 bg-white transition-colors"/>
               </div>
-            </div>
-            <table className="w-full">
-              <thead>
-                <tr>{["Name","Email","Phone Number","Employees ID"].map(h => <th key={h} className="text-xs text-gray-400 font-medium pb-3 text-left">{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {CLIENTS.map(c => (
-                  <tr key={c.id} className="border-t border-gray-50">
-                    <td className="py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-orange-600 flex items-center justify-center text-white text-xs font-bold">{c.name[0]}</div>
-                        <div>
-                          <p className="text-sm text-gray-800 font-medium leading-tight">{c.name}</p>
-                          <p className="text-xs text-gray-400">{c.role}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 text-sm text-gray-500">{c.email}</td>
-                    <td className="py-3 text-sm text-gray-500">{c.phone}</td>
-                    <td className="py-3 text-sm text-gray-500">{c.id}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-400">Showing 1 to 9 of 90 entries</p>
-              <div className="flex gap-1">
-                <button className="text-xs text-gray-400 px-3 py-1 rounded-lg hover:bg-gray-100 cursor-pointer">Previous</button>
-                <button className="text-xs bg-[#F97316] text-white px-3 py-1 rounded-lg cursor-pointer">1</button>
-                <button className="text-xs text-gray-400 px-3 py-1 rounded-lg hover:bg-gray-100 cursor-pointer">2</button>
-                <button className="text-xs text-gray-400 px-3 py-1 rounded-lg hover:bg-gray-100 cursor-pointer">Next</button>
-              </div>
-            </div>
+            ))}
+            <button className="w-full py-3 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors cursor-pointer">
+              Update Password
+            </button>
           </div>
         </div>
+
+        {/* Genre Preferences */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-4">
+          <p className="text-sm font-semibold text-gray-800 mb-1">Genre Preferences</p>
+          <p className="text-xs text-gray-400 mb-4">Select the topics you want to see in your Explore feed</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {["Technology","Finance","Science","Culture","Business","Health","Design","Law","Education"].map(genre => (
+              <label key={genre} className="flex items-center gap-2.5 cursor-pointer group">
+                <input type="checkbox" defaultChecked={["Technology","Finance","Culture"].includes(genre)}
+                  className="w-4 h-4 rounded border-gray-300 accent-black cursor-pointer"/>
+                <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{genre}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Notifications */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+          <p className="text-sm font-semibold text-gray-800 mb-4">Notifications</p>
+          <div className="flex flex-col gap-5">
+            {[
+              { label:"New articles in my genres",        sub:"Get notified when verified articles match your preferences" },
+              { label:"Reading streak reminders",         sub:"Daily nudge to keep your streak going"                     },
+              { label:"Accuracy score updates",           sub:"When your opinion rating changes"                          },
+            ].map(({ label, sub }) => (
+              <div key={label} className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm text-gray-800">{label}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
+                </div>
+                <div className="w-10 h-5 bg-[#111] rounded-full flex-shrink-0 relative cursor-pointer mt-0.5">
+                  <div className="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5 shadow-sm"/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </AppLayout>
   );
