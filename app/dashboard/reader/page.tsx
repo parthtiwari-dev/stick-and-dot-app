@@ -166,7 +166,7 @@ export default function ReaderDashboard() {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-gray-100 pt-4">
               {[
                 { label:"Articles This Month", value:"14" },
                 { label:"Avg. Daily Reading",  value:"22 min" },

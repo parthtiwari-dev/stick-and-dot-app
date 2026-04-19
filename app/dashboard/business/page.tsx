@@ -69,7 +69,7 @@ export default function BusinessDashboard() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-bold text-gray-400">#{a.rank}</span>
                   <div>
-                    <p className="text-sm text-gray-800 font-medium leading-tight max-w-[160px] truncate">{a.title}</p>
+                    <p className="text-sm text-gray-800 font-medium leading-tight line-clamp-2">{a.title}</p>
                     <p className="text-xs text-gray-400">{a.views} views</p>
                   </div>
                 </div>
