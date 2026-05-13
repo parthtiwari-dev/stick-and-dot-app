@@ -2,8 +2,6 @@
 import AppLayout from "@/components/AppLayout";
 import { useUser } from "@/components/UserContext";
 
-const NICHE_TAGS = ["Technology","Finance","Health","Science","Law","Education","Business","Culture","Politics","Environment"];
-
 export default function WriterSettings() {
   const { userName } = useUser();
   return (
@@ -65,24 +63,7 @@ export default function WriterSettings() {
           </button>
         </div>
 
-        {/* Writing Niches */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
-          <p className="text-sm font-semibold text-gray-800 mb-1">Writing Niches</p>
-          <p className="text-xs text-gray-400 mb-4">Select topics you write about — helps match you with the right commissions</p>
-          <div className="flex flex-wrap gap-2">
-            {NICHE_TAGS.map((tag, i) => (
-              <button key={tag}
-                className={`px-4 py-2 rounded-full text-xs font-medium border cursor-pointer transition-colors ${
-                  [0,2,5].includes(i) ? "bg-[#111] text-white border-[#111]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                }`}>
-                {tag}
-              </button>
-            ))}
-          </div>
-          <button className="mt-5 px-5 py-2.5 bg-[#111] text-white text-xs font-semibold rounded-xl hover:bg-[#333] cursor-pointer transition-colors">
-            Save Preferences
-          </button>
-        </div>
+
       </div>
     </AppLayout>
   );

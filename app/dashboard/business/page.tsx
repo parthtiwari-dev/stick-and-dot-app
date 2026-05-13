@@ -1,12 +1,12 @@
 "use client";
 import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
-import { Search, TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 const TOP_ARTICLES = [
-  { rank:1, title:"The Future of EVs in India",           views:"18.4K", rating:4.8 },
-  { rank:2, title:"Top 10 Finance Hacks for Gen-Z",       views:"11.2K", rating:4.5 },
-  { rank:3, title:"AI in Healthcare: What Doctors Say",   views:"9.7K",  rating:4.7 },
+  { rank:1, title:"The Future of EVs in India",         views:"18.4K", rating:4.8 },
+  { rank:2, title:"Top 10 Finance Hacks for Gen-Z",     views:"11.2K", rating:4.5 },
+  { rank:3, title:"AI in Healthcare: What Doctors Say", views:"9.7K",  rating:4.7 },
 ];
 
 export default function BusinessDashboard() {
@@ -15,32 +15,18 @@ export default function BusinessDashboard() {
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-6 min-h-screen">
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-3">
-          <div>
-            <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Profile</p>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
-            <p className="text-sm text-gray-500">Your Dashboard Preview</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-2">
-              <button className="bg-[#111] text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer">Today</button>
-              <button className="bg-white border border-gray-200 text-gray-600 text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-50">Select Date</button>
-              <button className="bg-white border border-gray-200 text-gray-600 text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-50 flex items-center gap-1">
-                <span>▼</span> Filter
-              </button>
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-40">
-              <Search size={13}/><span>Search</span>
-            </div>
-          </div>
+        {/* Header — date/filter/search removed per plan */}
+        <div className="mb-5">
+          <p className="text-xs text-gray-400 mb-0.5">Dashboard</p>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
+          <p className="text-sm text-gray-500">Your Dashboard Preview</p>
         </div>
 
         {/* Stat Cards — Words Ordered / Words Pending / Payment Done */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 mb-4">
           {[
-            { label:"Words Ordered",         value:"84,200", icon:"📋", change:"+22.4%",  up:true  },
-            { label:"Words Pending Delivery", value:"12,400", icon:"⏳", change:"-8.3%",   up:false },
+            { label:"Words Ordered",         value:"84,200",  icon:"📋", change:"+22.4%", up:true  },
+            { label:"Words Pending Delivery", value:"12,400",  icon:"⏳", change:"-8.3%",  up:false },
             { label:"Payment Done",           value:"₹62,500", icon:"🪙", change:"+31.2%", up:true  },
           ].map(({ label, value, icon, change, up }) => (
             <div key={label} className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-4">

@@ -2,7 +2,7 @@
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { useUser } from "@/components/UserContext";
-import { Search, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 const QUEUE = [
   { id:"ART-0041", title:"The Future of EVs in India",        domain:"Technology", writer:"Ravi M.",  submitted:"Apr 10", urgency:"high"   },
@@ -29,24 +29,19 @@ export default function SubjectExpertDashboard() {
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-4 md:p-6 min-h-screen">
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
-          <div>
-            <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Expert</p>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
-            <p className="text-sm text-gray-500">Your Review Activity</p>
-          </div>
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-400 w-40">
-            <Search size={13}/><span>Search</span>
-          </div>
+        {/* Header — search removed per plan */}
+        <div className="mb-5">
+          <p className="text-xs text-gray-400 mb-0.5">Dashboard&gt;Expert</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Welcome, {userName}</h1>
+          <p className="text-sm text-gray-500">Your Review Activity</p>
         </div>
 
-        {/* Stat Cards — Reviews Done / Avg Accuracy Score / Payment Received */}
+        {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
           {[
-            { label:"Reviews Done",       value:"22",     icon:"✅", change:"+18%",    up:true  },
-            { label:"Avg Accuracy Score", value:"4.3 / 5", icon:"🎯", change:"+0.4",    up:true  },
-            { label:"Payment Received",   value:"₹9,200", icon:"🪙", change:"+22.1%",  up:true  },
+            { label:"Reviews Done",       value:"22",      icon:"✅", change:"+18%",   up:true },
+            { label:"Avg Accuracy Score", value:"4.3 / 5", icon:"🎯", change:"+0.4",   up:true },
+            { label:"Payment Received",   value:"₹9,200",  icon:"🪙", change:"+22.1%", up:true },
           ].map(({ label, value, icon, change, up }) => (
             <div key={label} className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-4">
               <div className="text-3xl">{icon}</div>

@@ -45,8 +45,9 @@ export default function WriterProfile() {
               <p className="text-gray-400 text-xs">@shaivyasaini</p>
             </div>
 
+            {/* Stats — Followers replaced with Words Written per plan */}
             <div className="flex justify-around mb-5 py-4 border-y border-gray-100">
-              {[{ label: "Articles", val: "24" }, { label: "Followers", val: "1.2K" }, { label: "Avg Rating", val: "4.7" }].map(s => (
+              {[{ label:"Articles", val:"24" }, { label:"Words Written", val:"84K" }, { label:"Avg Rating", val:"4.7" }].map(s => (
                 <div key={s.label} className="text-center">
                   <p className="text-gray-900 font-bold text-base">{s.val}</p>
                   <p className="text-gray-400 text-xs">{s.label}</p>
@@ -56,7 +57,6 @@ export default function WriterProfile() {
 
             <div className="space-y-2 mb-5">
               <div><p className="text-xs text-gray-400 mb-0.5">Domain</p><p className="text-sm text-gray-700">Technology, Finance</p></div>
-              <div><p className="text-xs text-gray-400 mb-0.5">Location</p><p className="text-sm text-gray-700">Mumbai, India</p></div>
               <div><p className="text-xs text-gray-400 mb-0.5">Member since</p><p className="text-sm text-gray-700">January 2023</p></div>
             </div>
 

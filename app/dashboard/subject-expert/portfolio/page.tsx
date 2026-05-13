@@ -1,142 +1,210 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
-import { Search, ArrowLeft, ArrowRight, X, CheckCircle, AlertCircle } from "lucide-react";
-import { useUser } from "@/components/UserContext";
-import { MESH_STYLES } from "@/components/ui/MeshCard";
+import { ChevronRight } from "lucide-react";
+import { dashRootPath } from "@/lib/roles";
 
 const REVIEWS = [
-  { id:"r1", title:"AI in Healthcare 2026",      domain:"Medical",    decision:"Approved",           score:4.2, date:"10 Apr 2026", articleId:"1", summary:"Well-researched article with accurate clinical data. Minor terminology issues corrected. Approved for publication.", keywords:["medical","AI","healthcare"] },
-  { id:"r2", title:"Quantum Computing Basics",   domain:"Technology", decision:"Revision Requested", score:2.8, date:"8 Apr 2026",  articleId:"2", summary:"Core concepts explained clearly but several factual errors in the section on qubit decoherence. Revision required.", keywords:["technology","quantum","computing"] },
-  { id:"r3", title:"The Future of CRISPR",       domain:"Science",    decision:"Approved",           score:4.7, date:"5 Apr 2026",  articleId:"3", summary:"Excellent accuracy across all sections. The gene-editing examples were well chosen and correctly cited.", keywords:["science","biology","genetics"] },
-  { id:"r4", title:"Crypto Regulations 2025",    domain:"Finance",    decision:"Approved",           score:4.5, date:"1 Apr 2026",  articleId:"4", summary:"Balanced analysis of the regulatory landscape. Minor updates to EU jurisdiction claims. Approved.", keywords:["finance","crypto","regulation"] },
-  { id:"r5", title:"Mental Health at Work",      domain:"Business",   decision:"Approved",           score:4.8, date:"28 Mar 2026", articleId:"5", summary:"Sensitive topic handled with care. Statistics sourced correctly. A standout article — approved without changes.", keywords:["business","health","workplace"] },
-];
-const TAGS = ["#medical","#technology","#science","#finance","#business"];
-const CARD_STYLES_SME = [
-  { bg:"#0d1a0d", blob1:"#16a34a", blob2:"#15803d", blob3:"#4ade80" },
-  { bg:"#1a0d0d", blob1:"#dc2626", blob2:"#db2777", blob3:"#f97316" },
-  { bg:"#0d1f33", blob1:"#0ea5e9", blob2:"#6366f1", blob3:"#06b6d4" },
-  { bg:"#1a0533", blob1:"#7c3aed", blob2:"#c026d3", blob3:"#4f46e5" },
-  { bg:"#1a1a0d", blob1:"#ca8a04", blob2:"#ea580c", blob3:"#84cc16" },
+  {
+    id: "1",
+    title: "The Future of Neural Computing",
+    author: "Aryan Mehta",
+    domain: "Technology",
+    tags: ["#AI", "#technology"],
+    reviewedOn: "2024-01-15",
+    score: 91,
+    decision: "Approved",
+    summary: "Well-researched piece with strong citations and clear structure.",
+  },
+  {
+    id: "2",
+    title: "Quantum Entanglement Explained",
+    author: "Priya Nair",
+    domain: "Science",
+    tags: ["#physics", "#science"],
+    reviewedOn: "2024-01-22",
+    score: 63,
+    decision: "Needs Revision",
+    summary: "Core concepts are sound but explanations need simplification for general audience.",
+  },
+  {
+    id: "3",
+    title: "Blockchain in Supply Chain",
+    author: "Rohan Das",
+    domain: "Technology",
+    tags: ["#blockchain", "#technology"],
+    reviewedOn: "2024-02-03",
+    score: 42,
+    decision: "Rejected",
+    summary: "Significant factual inaccuracies in sections 2 and 4. Needs substantial rewrite.",
+  },
+  {
+    id: "4",
+    title: "Climate Models and Prediction",
+    author: "Sneha Kulkarni",
+    domain: "Science",
+    tags: ["#climate", "#science"],
+    reviewedOn: "2024-02-11",
+    score: 88,
+    decision: "Approved",
+    summary: "Excellent use of recent data. Methodology section is particularly strong.",
+  },
+  {
+    id: "5",
+    title: "Machine Learning in Healthcare",
+    author: "Vikram Joshi",
+    domain: "Technology",
+    tags: ["#ML", "#healthcare"],
+    reviewedOn: "2024-02-19",
+    score: 74,
+    decision: "Needs Revision",
+    summary: "Good foundation but requires updated references and stronger conclusion.",
+  },
+  {
+    id: "6",
+    title: "Dark Matter: Current Theories",
+    author: "Ananya Singh",
+    domain: "Science",
+    tags: ["#physics", "#science"],
+    reviewedOn: "2024-03-01",
+    score: 95,
+    decision: "Approved",
+    summary: "Outstanding work. One of the clearest explanations of dark matter candidates reviewed.",
+  },
 ];
 
-function MeshCard({ review, size, styleIndex }:{ review:typeof REVIEWS[0]; size:"lg"|"sm"; styleIndex:number }) {
-  const s = CARD_STYLES_SME[styleIndex % CARD_STYLES_SME.length];
-  const h = size==="lg"?380:290;
-  const approved = review.decision==="Approved";
-  return (
-    <Link href={`/articles/${review.articleId}`} className="block hover:opacity-90 transition-opacity">
-      <div className="relative rounded-3xl overflow-hidden select-none" style={{ height:h, background:s.bg }}>
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute rounded-full opacity-40 blur-3xl" style={{ width:220,height:220,background:s.blob1,top:-60,left:-40 }} />
-          <div className="absolute rounded-full opacity-30 blur-3xl" style={{ width:180,height:180,background:s.blob2,bottom:20,right:-30 }} />
-          <div className="absolute rounded-full opacity-20 blur-2xl" style={{ width:140,height:140,background:s.blob3,top:"40%",left:"40%" }} />
-        </div>
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-          <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white/80 text-xs px-3 py-1 rounded-full">{review.domain}</span>
-          {size==="lg"&&(
-            <span className={`flex items-center gap-1 text-xs px-3 py-1 rounded-full font-semibold backdrop-blur-md border ${approved?"bg-green-500/70 border-green-400/40 text-white":"bg-orange-500/70 border-orange-400/40 text-white"}`}>
-              {approved?<CheckCircle size={10}/>:<AlertCircle size={10}/>}{review.decision}
-            </span>
-          )}
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 p-5 z-10" style={{ background:"linear-gradient(to top,rgba(0,0,0,0.65) 0%,transparent 100%)" }}>
-          <h3 className={`text-white font-bold leading-snug mb-1 ${size==="lg"?"text-xl":"text-base"} line-clamp-2`}>{review.title}</h3>
-          <div className="flex items-center justify-between">
-            <span className="text-white/40 text-xs">{review.date} · Score {review.score}/5</span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
+const CARDS_PER_LOAD = 6;
+
+function formatDate(d: string): string {
+  const [year, month, day] = d.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function cardBorder(decision: string): string {
+  if (decision === "Approved")       return "border-[#16a34a]";
+  if (decision === "Rejected")       return "border-[#dc2626]";
+  return "border-[#e5e7eb]";
 }
 
 export default function SMEPortfolioPage() {
-  const { userName } = useUser();
-  const [query, setQuery]       = useState("");
-  const [activeTag, setActiveTag] = useState("");
-  const [active, setActive]     = useState(0);
+  const [visibleCount, setVisibleCount] = useState(CARDS_PER_LOAD);
 
-  const filtered = useMemo(() => {
-    let cs = REVIEWS;
-    if (activeTag) { const t=activeTag.replace("#","").toLowerCase(); cs=cs.filter(c=>c.domain.toLowerCase().includes(t)||c.keywords.some(k=>k.includes(t))); }
-    if (query.trim()) { const q=query.toLowerCase(); cs=cs.filter(c=>c.title.toLowerCase().includes(q)||c.domain.toLowerCase().includes(q)); }
-    return cs.length>0?cs:REVIEWS;
-  }, [query, activeTag]);
+  const visible  = REVIEWS.slice(0, visibleCount);
+  const hasMore  = visibleCount < REVIEWS.length;
 
-  useEffect(()=>{setActive(0);},[filtered]);
-  const prev = useCallback(()=>setActive(i=>(i-1+filtered.length)%filtered.length),[filtered.length]);
-  const next = useCallback(()=>setActive(i=>(i+1)%filtered.length),[filtered.length]);
-  const safe=Math.min(active,filtered.length-1);
-  const leftIdx=(safe-1+filtered.length)%filtered.length;
-  const rightIdx=(safe+1)%filtered.length;
-  const focused=filtered[safe];
+  const statsTotal         = REVIEWS.length;
+  const statsApproved      = REVIEWS.filter(r => r.decision === "Approved").length;
+  const statsRejected      = REVIEWS.filter(r => r.decision === "Rejected").length;
+  const statsNeedsRevision = REVIEWS.filter(r => r.decision === "Needs Revision").length;
 
   return (
-    <AppLayout bg="bg-[#0d0d0d]">
-      <div className="min-h-screen flex flex-col">
-        <div className="px-6 pt-8 pb-4 flex items-center justify-between">
-          <div>
-            <p className="text-white/30 text-xs mb-0.5">Dashboard &gt; Portfolio</p>
-            <h1 className="text-white text-2xl font-bold">My Review Portfolio</h1>
-            <p className="text-white/40 text-sm mt-0.5">{userName} · {REVIEWS.length} articles reviewed</p>
+    <AppLayout bg="bg-white">
+      <div className="min-h-screen px-6 md:px-10 py-10">
+
+        {/* Header */}
+        <div className="mb-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1 mb-1" aria-label="Breadcrumb">
+            <Link
+              href={dashRootPath("Subject Expert")}
+              className="text-xs text-[#6b7280] hover:text-[#0a0a0a] transition-colors"
+            >
+              Dashboard
+            </Link>
+            <ChevronRight size={16} className="text-[#9ca3af]" />
+            <span className="text-xs text-[#0a0a0a] font-medium">Portfolio</span>
+          </nav>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#0a0a0a]">My Portfolio</h1>
+          <p className="text-sm text-[#6b7280] mt-1">Your review history and decisions</p>
+        </div>
+
+        {/* Stats bar */}
+        <div className="flex border border-[#e5e7eb] rounded-[10px] bg-white mb-7">
+          <div className="flex flex-col px-6 py-4 flex-1">
+            <span className="text-[20px] font-semibold text-[#0a0a0a]">{statsTotal}</span>
+            <span className="text-[13px] text-[#6b7280]">Total Reviews</span>
+          </div>
+          <div className="flex flex-col px-6 py-4 flex-1 border-l border-[#e5e7eb]">
+            <span className="text-[20px] font-semibold text-[#0a0a0a]">{statsApproved}</span>
+            <span className="text-[13px] text-[#6b7280]">Approved</span>
+          </div>
+          <div className="flex flex-col px-6 py-4 flex-1 border-l border-[#e5e7eb]">
+            <span className="text-[20px] font-semibold text-[#0a0a0a]">{statsRejected}</span>
+            <span className="text-[13px] text-[#6b7280]">Rejected</span>
+          </div>
+          <div className="flex flex-col px-6 py-4 flex-1 border-l border-[#e5e7eb]">
+            <span className="text-[20px] font-semibold text-[#0a0a0a]">{statsNeedsRevision}</span>
+            <span className="text-[13px] text-[#6b7280]">Needs Revision</span>
           </div>
         </div>
-        <div className="flex flex-col items-center px-6 pb-4">
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 w-full max-w-lg mb-3">
-            <Search size={14} className="text-white/30 flex-shrink-0"/>
-            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search your reviews…" className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/25"/>
-            {query&&<button onClick={()=>setQuery("")} className="text-white/30 hover:text-white/60 cursor-pointer"><X size={13}/></button>}
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {TAGS.map(t=>(
-              <button key={t} onClick={()=>setActiveTag(activeTag===t?"":t)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-all ${activeTag===t?"bg-white text-black border-white":"bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white/80"}`}>
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col items-center pb-10 px-4">
-          <div className="relative w-full flex items-center justify-center">
-            <button onClick={prev} className="flex-shrink-0 z-20 mr-3 md:mr-5 w-11 h-11 rounded-2xl bg-white/8 hover:bg-white/15 border border-white/10 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group">
-              <ArrowLeft size={18} className="text-white/60 group-hover:text-white"/>
-            </button>
-            <div className="flex items-center gap-4 md:gap-6 justify-center overflow-visible">
-              {filtered.length>1&&(
-                <div onClick={prev} className="hidden sm:block cursor-pointer transition-all duration-500 opacity-40 hover:opacity-60 scale-90 hover:scale-95 flex-shrink-0" style={{ width:220 }}>
-                  <MeshCard review={filtered[leftIdx]} size="sm" styleIndex={leftIdx}/>
-                </div>
-              )}
-              <div className="flex-shrink-0 transition-all duration-500" style={{ width:"min(360px,90vw)" }}>
-                <div className="transition-all duration-500 hover:scale-[1.02] shadow-2xl" style={{ filter:"drop-shadow(0 0 40px rgba(255,255,255,0.07))" }}>
-                  <MeshCard review={focused} size="lg" styleIndex={safe}/>
-                </div>
-                <div className="mt-5 text-center px-2">
-                  <p className="text-white/45 text-sm leading-relaxed mb-5">{focused.summary}</p>
-                  <Link href={`/articles/${focused.articleId}`} className="inline-flex items-center gap-2 bg-white text-black text-sm font-bold px-7 py-3 rounded-2xl hover:bg-white/90 transition-all hover:scale-[1.03] active:scale-95">
-                    View Article <ArrowRight size={14}/>
-                  </Link>
-                </div>
+
+        {/* Cards grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {visible.map(r => (
+            <div
+              key={r.id}
+              className={`relative bg-white border rounded-[12px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]
+                           hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] hover:-translate-y-0.5
+                           transition-all duration-200 flex flex-col overflow-hidden min-h-[220px]
+                           ${cardBorder(r.decision)}`}
+            >
+              {/* Decision badge — always top-right, always black */}
+              <span className="absolute top-3 right-3 z-10 text-[11px] font-semibold px-[10px] py-[3px] rounded-[20px] bg-[#0a0a0a] text-white">
+                {r.decision}
+              </span>
+
+              {/* Tag banner */}
+              <div className="bg-[#fafafa] border-b border-[#e5e7eb] h-[72px] flex items-end px-4 pb-3 flex-shrink-0">
+                <span className="bg-[#0a0a0a] text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
+                  {r.tags[0] ?? r.domain}
+                </span>
               </div>
-              {filtered.length>1&&(
-                <div onClick={next} className="hidden sm:block cursor-pointer transition-all duration-500 opacity-40 hover:opacity-60 scale-90 hover:scale-95 flex-shrink-0" style={{ width:220 }}>
-                  <MeshCard review={filtered[rightIdx]} size="sm" styleIndex={rightIdx}/>
+
+              {/* Content */}
+              <div className="p-4 flex flex-col gap-2 flex-1">
+                {/* Title */}
+                <p className="text-sm font-bold text-[#0a0a0a] line-clamp-2 flex-1">
+                  {r.title}
+                </p>
+
+                {/* Author + domain */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs text-[#6b7280]">{r.author}</span>
+                  <span className="text-[10px] bg-[#f3f4f6] text-[#374151] px-2 py-0.5 rounded-full">
+                    {r.domain}
+                  </span>
                 </div>
-              )}
+
+                {/* Reviewed date + score */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#6b7280]">{formatDate(r.reviewedOn)}</span>
+                  <span className="text-xs text-[#6b7280]">Score: {r.score}/100</span>
+                </div>
+
+                {/* Summary — 1 line clamp */}
+                <p className="text-xs text-[#6b7280] line-clamp-1 pt-2 border-t border-[#f3f4f6] mt-auto">
+                  {r.summary}
+                </p>
+              </div>
             </div>
-            <button onClick={next} className="flex-shrink-0 z-20 ml-3 md:ml-5 w-11 h-11 rounded-2xl bg-white/8 hover:bg-white/15 border border-white/10 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group">
-              <ArrowRight size={18} className="text-white/60 group-hover:text-white"/>
-            </button>
-          </div>
-          <div className="flex items-center gap-2 mt-8">
-            {filtered.map((_,i)=>(
-              <button key={i} onClick={()=>setActive(i)} className={`rounded-full transition-all duration-300 cursor-pointer ${i===safe?"w-7 h-2 bg-white":"w-2 h-2 bg-white/20 hover:bg-white/40"}`}/>
-            ))}
-          </div>
+          ))}
         </div>
+
+        {/* Load More */}
+        {hasMore && (
+          <button
+            onClick={() => setVisibleCount(c => c + CARDS_PER_LOAD)}
+            className="w-full border border-[#e5e7eb] rounded-[8px] bg-white text-[#0a0a0a] text-sm font-medium py-3 hover:bg-[#f9fafb] transition-colors cursor-pointer"
+          >
+            Load more reviews
+          </button>
+        )}
+
       </div>
     </AppLayout>
   );

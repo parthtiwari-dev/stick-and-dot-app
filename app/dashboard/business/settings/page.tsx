@@ -71,28 +71,6 @@ export default function BusinessSettings() {
             </button>
           </div>
 
-          {/* Notification Preferences */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100">
-            <p className="text-sm font-semibold text-gray-800 mb-4">Notifications</p>
-            <div className="flex flex-col gap-4">
-              {[
-                { label:"Commission accepted by writer",   sub:"Get notified when a writer picks up your commission" },
-                { label:"Article delivered",               sub:"When commissioned content is ready for review"       },
-                { label:"SME review completed",            sub:"When an SME approves or requests revision"           },
-                { label:"Payment confirmation",            sub:"Transaction receipts and payment updates"            },
-              ].map(({ label, sub }) => (
-                <div key={label} className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-gray-800">{label}</p>
-                    <p className="text-xs text-gray-400">{sub}</p>
-                  </div>
-                  <div className="w-10 h-5 bg-[#111] rounded-full flex-shrink-0 relative cursor-pointer">
-                    <div className="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5"/>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </AppLayout>

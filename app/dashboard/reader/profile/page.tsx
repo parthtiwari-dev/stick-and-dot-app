@@ -10,11 +10,7 @@ const READING_LISTS = [
   { name: "Finance Fundamentals", count: 5,  genre: "Finance"    },
 ];
 
-const FAVOURITE_AUTHORS = [
-  { name: "Arthur Black",  domain: "Technology", articles: 24 },
-  { name: "Jerome Bell",   domain: "Finance",    articles: 18 },
-  { name: "Priya Mehta",   domain: "Culture",    articles: 31 },
-];
+// FAVOURITE_AUTHORS removed — Following Authors section removed per plan
 
 export default function ReaderProfile() {
   const { userName } = useUser();
@@ -43,8 +39,9 @@ export default function ReaderProfile() {
               <p className="text-gray-400 text-xs">@shaivyasaini</p>
             </div>
 
+            {/* Stats — Following replaced with Streak per plan */}
             <div className="flex justify-around mb-5 py-4 border-y border-gray-100">
-              {[{ label:"Articles Read", val:"148" }, { label:"Lists", val:"3" }, { label:"Following", val:"12" }].map(s => (
+              {[{ label:"Articles Read", val:"148" }, { label:"Lists", val:"3" }, { label:"Streak", val:"7🔥" }].map(s => (
                 <div key={s.label} className="text-center">
                   <p className="text-gray-900 font-bold text-base">{s.val}</p>
                   <p className="text-gray-400 text-xs">{s.label}</p>
@@ -91,24 +88,7 @@ export default function ReaderProfile() {
               </div>
             </div>
 
-            {/* Favourite authors */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
-              <p className="text-gray-900 font-semibold mb-4">Following Authors</p>
-              <div className="flex flex-col gap-3">
-                {FAVOURITE_AUTHORS.map(a => (
-                  <div key={a.name} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-300 to-orange-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                      {a.name[0]}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">{a.name}</p>
-                      <p className="text-xs text-gray-400">{a.domain} · {a.articles} articles</p>
-                    </div>
-                    <button className="text-xs text-gray-400 border border-gray-200 px-3 py-1 rounded-lg hover:bg-gray-50 cursor-pointer">Following</button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Following Authors section removed per plan */}
           </div>
         </div>
       </div>

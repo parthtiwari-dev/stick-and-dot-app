@@ -5,14 +5,14 @@ import Link from "next/link";
 import { Search, Edit2, Star } from "lucide-react";
 
 const REVIEWS = [
-  { article: "AI in Healthcare 2026",      verdict: "Approved",         rating: 4, date: "10 Apr 2026" },
+  { article: "AI in Healthcare 2026",      verdict: "Approved",           rating: 4, date: "10 Apr 2026" },
   { article: "Quantum Computing Basics",   verdict: "Revision Requested", rating: 3, date: "8 Apr 2026"  },
-  { article: "The Future of CRISPR",       verdict: "Approved",         rating: 5, date: "5 Apr 2026"  },
+  { article: "The Future of CRISPR",       verdict: "Approved",           rating: 5, date: "5 Apr 2026"  },
 ];
 
 const VERDICTCLS: Record<string, string> = {
-  "Approved":            "bg-green-50 text-green-600",
-  "Revision Requested":  "bg-yellow-50 text-yellow-600",
+  "Approved":           "bg-green-50 text-green-600",
+  "Revision Requested": "bg-yellow-50 text-yellow-600",
 };
 
 function StarRow({ n }: { n: number }) {
@@ -90,16 +90,6 @@ export default function SubjectExpertProfile() {
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ml-3 ${VERDICTCLS[r.verdict]}`}>{r.verdict}</span>
                 </div>
               ))}
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-gray-900">76%</p>
-                <p className="text-xs text-gray-400 mt-1">Approval Rate</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-gray-900">1.8 days</p>
-                <p className="text-xs text-gray-400 mt-1">Avg Review Time</p>
-              </div>
             </div>
           </div>
         </div>

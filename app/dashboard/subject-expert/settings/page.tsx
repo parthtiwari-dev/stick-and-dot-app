@@ -2,8 +2,6 @@
 import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 
-const DOMAINS = ["Technology","Finance","Medical / Health","Law","Science","Engineering","Education","Business","Culture","Other"];
-
 export default function SubjectExpertSettings() {
   const { userName } = useUser();
   return (
@@ -39,25 +37,6 @@ export default function SubjectExpertSettings() {
           </div>
           <button className="mt-5 px-5 py-2.5 bg-[#111] text-white text-xs font-semibold rounded-xl hover:bg-[#333] cursor-pointer transition-colors">
             Save Profile
-          </button>
-        </div>
-
-        {/* Domain of Expertise */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-4">
-          <p className="text-sm font-semibold text-gray-800 mb-1">Domain of Expertise</p>
-          <p className="text-xs text-gray-400 mb-4">Select the fields you can review articles in</p>
-          <div className="flex flex-wrap gap-2">
-            {DOMAINS.map((d, i) => (
-              <button key={d}
-                className={`px-4 py-2 rounded-full text-xs font-medium border cursor-pointer transition-colors ${
-                  [0,2].includes(i) ? "bg-[#111] text-white border-[#111]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                }`}>
-                {d}
-              </button>
-            ))}
-          </div>
-          <button className="mt-5 px-5 py-2.5 bg-[#111] text-white text-xs font-semibold rounded-xl hover:bg-[#333] cursor-pointer transition-colors">
-            Save Domain
           </button>
         </div>
 

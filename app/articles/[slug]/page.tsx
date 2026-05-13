@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Star, LayoutDashboard, Compass, FilePlus, Settings, FolderOpen, BookOpen, ClipboardList, Users, Upload } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { Star, LayoutDashboard, Compass, FilePlus, Settings, FolderOpen, BookOpen, ClipboardList, Users, Upload, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { getStoredRole, rawToDash } from "@/lib/roles";
 
 function Stars({ n, size = 12 }: { n: number; size?: number }) {
@@ -28,7 +29,16 @@ const WRITER_TOOLS = [
   { label:"RW",          desc:"Readability wizard" },
 ];
 
-/* Role-based sidebar nav */
+const QUALITY_DIMS = [
+  { label:"Clarity",   desc:"Is the writing clear and easy to follow?" },
+  { label:"Depth",     desc:"Does it cover the topic thoroughly?" },
+  { label:"Accuracy",  desc:"Are the facts and claims correct?" },
+  { label:"Relevance", desc:"Is the content relevant to the domain?" },
+  { label:"Sources",   desc:"Are sources cited and credible?" },
+  { label:"Balance",   desc:"Are multiple viewpoints considered?" },
+  { label:"Insight",   desc:"Does it add new perspectives?" },
+];
+
 const NAV_BY_ROLE: Record<string, { label:string; href:string; icon:React.ComponentType<{size?:number;strokeWidth?:number}> }[]> = {
   writer: [
     { label:"Dashboard", href:"/dashboard/writer",           icon:LayoutDashboard },
@@ -57,21 +67,36 @@ const NAV_BY_ROLE: Record<string, { label:string; href:string; icon:React.Compon
   ],
 };
 
-export default function ArticlePage() {
+function ArticlePageInner() {
   const [comment, setComment] = useState("");
   const [role, setRole] = useState("reader");
   const [activeTool, setActiveTool] = useState<string|null>(null);
+  const [activeDim, setActiveDim] = useState<string|null>(null);
+  const [dimRatings, setDimRatings] = useState<Record<string,number>>({});
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  const searchParams = useSearchParams();
+  const isOwnArticle = searchParams.get("own") === "1";
 
   useEffect(()=>{ setRole(rawToDash(getStoredRole())); }, []);
 
   const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.reader;
-  const isWriter = role === "writer";
+  const isWriterOwner = role === "writer" && isOwnArticle;
+  const isSME = role === "subject-expert";
+  const showPanel = isWriterOwner || isSME;
+
+  const rateDim = (label: string, score: number) => {
+    setDimRatings(prev => ({ ...prev, [label]: score }));
+    setActiveDim(label);
+  };
+
+  const allRated = QUALITY_DIMS.every(d => dimRatings[d.label]);
 
   return (
     <div className="flex min-h-screen bg-white flex-col">
       <div className="flex flex-1">
 
-        {/* Slim dark sidebar — role-aware nav */}
+        {/* Slim dark sidebar */}
         <aside className="hidden md:flex fixed top-0 left-0 h-screen w-[60px] bg-[#0A0A0A] flex-col items-center z-20 rounded-r-2xl py-5 gap-1">
           {navItems.map(({ label, href, icon: Icon }) => (
             <Link key={href} href={href} title={label}
@@ -81,7 +106,6 @@ export default function ArticlePage() {
           ))}
         </aside>
 
-        {/* Main */}
         <main className="md:ml-[60px] flex-1 w-full">
           <div className="max-w-4xl mx-auto px-6 md:px-12 py-10">
 
@@ -100,60 +124,108 @@ export default function ArticlePage() {
               <p className="text-xs text-gray-400 mt-0.5">#technology #tech #career</p>
             </div>
 
-            {/* Keywords + Engagement + Writer Tools */}
-            <div className="bg-[#1A1A1A] rounded-2xl p-5 mb-6 mt-6">
-              <div className="flex flex-col sm:flex-row gap-6">
-                {/* Left — keywords + tools */}
-                <div className="flex-1">
-                  <p className="text-white text-sm font-semibold mb-1">Suggested Keywords</p>
-                  <p className="text-gray-400 text-xs mb-3">#technology #tech #Career</p>
-                  {/* Writer tools (shown for writer role; quality tools for reader/sme) */}
-                  {isWriter ? (
+            {/* Role-conditional panel — only for writer-owner and SME */}
+            {showPanel && (
+              <div className="bg-[#1A1A1A] rounded-2xl p-5 mb-6 mt-6">
+                <div className="flex flex-col sm:flex-row gap-6">
+
+                  {/* WRITER-OWNER: keywords + writing tools (left) + engagement (right) */}
+                  {isWriterOwner && (
                     <>
-                      <p className="text-gray-500 text-[10px] uppercase tracking-widest mb-2 font-semibold">Writing Tools</p>
-                      <div className="flex flex-wrap gap-2">
-                        {WRITER_TOOLS.map(tool => (
-                          <button key={tool.label}
-                            onClick={()=>setActiveTool(activeTool===tool.label?null:tool.label)}
-                            title={tool.desc}
-                            className={`text-xs px-3 py-1.5 rounded-full border cursor-pointer transition-all ${
-                              activeTool===tool.label
-                                ? "bg-orange-500 text-white border-orange-400"
-                                : "bg-[#2a2a2a] text-gray-300 border-white/10 hover:border-orange-400 hover:text-white"
-                            }`}>
-                            {tool.label} ·
-                          </button>
-                        ))}
+                      <div className="flex-1">
+                        <p className="text-white text-sm font-semibold mb-1">Suggested Keywords</p>
+                        <p className="text-gray-400 text-xs mb-3">#technology #tech #Career</p>
+                        <p className="text-gray-500 text-[10px] uppercase tracking-widest mb-2 font-semibold">Writing Tools</p>
+                        <div className="flex flex-wrap gap-2">
+                          {WRITER_TOOLS.map(tool => (
+                            <button key={tool.label}
+                              onClick={()=>setActiveTool(activeTool===tool.label?null:tool.label)}
+                              title={tool.desc}
+                              className={`text-xs px-3 py-1.5 rounded-full border cursor-pointer transition-all ${
+                                activeTool===tool.label
+                                  ? "bg-white text-black border-white"
+                                  : "bg-[#2a2a2a] text-gray-300 border-white/10 hover:border-white/40 hover:text-white"
+                              }`}>
+                              {tool.label}
+                            </button>
+                          ))}
+                        </div>
+                        {activeTool && (
+                          <p className="text-gray-500 text-xs mt-2">
+                            {WRITER_TOOLS.find(t=>t.label===activeTool)?.desc}
+                          </p>
+                        )}
                       </div>
-                      {activeTool && (
-                        <p className="text-gray-500 text-xs mt-2">
-                          {WRITER_TOOLS.find(t=>t.label===activeTool)?.desc}
-                        </p>
-                      )}
+                      <div className="flex-shrink-0 min-w-[130px] sm:text-right">
+                        <p className="text-white text-xs font-semibold mb-1">Engagement</p>
+                        <p className="text-white text-4xl font-bold">2.4K</p>
+                        <p className="text-gray-400 text-xs mt-1">263 contributions in the last year</p>
+                        <svg width="120" height="28" viewBox="0 0 120 28" className="mt-1 sm:ml-auto">
+                          <polyline points="0,22 20,18 40,20 60,8 80,12 100,5 120,3" stroke="#4ade80" strokeWidth="1.5" fill="none"/>
+                        </svg>
+                      </div>
                     </>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {["Clarity","Depth","Accuracy","Relevance","Sources","Balance","Insight"].map(k=>(
-                        <span key={k} className="bg-[#2a2a2a] text-gray-300 text-xs px-3 py-1.5 rounded-full">{k}</span>
-                      ))}
+                  )}
+
+                  {/* SME: interactive quality assessment — no engagement column */}
+                  {isSME && (
+                    <div className="flex-1">
+                      {reviewSubmitted ? (
+                        <div className="flex flex-col items-center justify-center py-4 gap-2">
+                          <CheckCircle size={28} className="text-green-400"/>
+                          <p className="text-white text-sm font-semibold">Review Submitted</p>
+                          <p className="text-gray-400 text-xs">Your assessment has been recorded.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-white text-sm font-semibold mb-1">Review Assessment</p>
+                          <p className="text-gray-400 text-xs mb-4">Rate each quality dimension. Click a dimension to see what it means.</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                            {QUALITY_DIMS.map(dim => (
+                              <div key={dim.label}
+                                onClick={() => setActiveDim(activeDim===dim.label?null:dim.label)}
+                                className={`rounded-xl p-3 border cursor-pointer transition-all select-none ${
+                                  activeDim===dim.label ? "border-white/30 bg-[#2a2a2a]" : "border-white/10 bg-[#222] hover:border-white/20"
+                                }`}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-white text-xs font-medium">{dim.label}</span>
+                                  <div className="flex gap-0.5">
+                                    {[1,2,3,4,5].map(s => (
+                                      <button key={s} onClick={e=>{e.stopPropagation(); rateDim(dim.label, s);}}
+                                        className="cursor-pointer transition-transform hover:scale-110">
+                                        <Star size={11}
+                                          fill={(dimRatings[dim.label]??0)>=s?"#F97316":"none"}
+                                          className={(dimRatings[dim.label]??0)>=s?"text-[#F97316]":"text-gray-600"}/>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                                {activeDim===dim.label && (
+                                  <p className="text-gray-500 text-[11px]">{dim.desc}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <button
+                            disabled={!allRated}
+                            onClick={()=>allRated&&setReviewSubmitted(true)}
+                            className={`text-xs font-semibold px-5 py-2.5 rounded-xl transition-all ${
+                              allRated
+                                ?"bg-white text-black hover:bg-gray-100 cursor-pointer"
+                                :"bg-[#2a2a2a] text-gray-600 cursor-not-allowed"
+                            }`}>
+                            {allRated?"Submit Review":`Rate all dimensions to submit (${Object.keys(dimRatings).length}/${QUALITY_DIMS.length})`}
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
-
-                {/* Right — Engagement */}
-                <div className="flex-shrink-0 min-w-[130px] text-right">
-                  <p className="text-white text-xs font-semibold mb-1">Engagement</p>
-                  <p className="text-white text-4xl font-bold">2.4K</p>
-                  <p className="text-gray-400 text-xs mt-1">263 contributions in the last year</p>
-                  <svg width="120" height="28" viewBox="0 0 120 28" className="mt-1 ml-auto">
-                    <polyline points="0,22 20,18 40,20 60,8 80,12 100,5 120,3" stroke="#4ade80" strokeWidth="1.5" fill="none"/>
-                  </svg>
-                </div>
               </div>
-            </div>
+            )}
 
-            {/* Hero image */}
-            <div className="w-full h-56 md:h-72 bg-gradient-to-br from-gray-700 to-gray-500 rounded-2xl mb-8 overflow-hidden flex items-center justify-center">
+            {/* Hero image — always shown on article view */}
+            <div className={`w-full h-56 md:h-72 bg-gradient-to-br from-gray-700 to-gray-500 rounded-2xl mb-8 overflow-hidden flex items-center justify-center ${showPanel ? "" : "mt-6"}`}>
               <span className="text-white/30 text-lg font-medium">Article Hero Image</span>
             </div>
 
@@ -178,7 +250,7 @@ export default function ArticlePage() {
               </div>
             </div>
 
-            {/* Comments */}
+            {/* Comments — visible to all roles */}
             <div className="mt-10 pt-6 border-t border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-5">Comments</h2>
               <div className="mb-6">
@@ -197,8 +269,6 @@ export default function ArticlePage() {
                   <button className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">+$XXX</button>
                 </div>
               </div>
-
-              {/* Ratings table */}
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
@@ -224,9 +294,18 @@ export default function ArticlePage() {
                 </tbody>
               </table>
             </div>
+
           </div>
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ArticlePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white"/>}>
+      <ArticlePageInner/>
+    </Suspense>
   );
 }

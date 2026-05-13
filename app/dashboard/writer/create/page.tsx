@@ -1,231 +1,158 @@
 "use client";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useState, useRef } from "react";
 import AppLayout from "@/components/AppLayout";
-import { useUser } from "@/components/UserContext";
-import { Bold, Italic, Heading2, Heading3, List } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
-const SUGGESTED_KEYWORDS = [
-  "#technology","#finance","#health","#climate","#startups",
-  "#AI","#design","#culture","#science","#future",
-  "#innovation","#policy","#economy","#education","#data",
+const SUGGESTED_KEYWORDS = ["#technology", "#tech", "#Career", "#innovation", "#future", "#AI", "#coding"];
+
+const WRITER_TOOLS = [
+  { label: "Readability", desc: "Check reading ease score of your article" },
+  { label: "Grammar",     desc: "Detect and fix grammar issues" },
+  { label: "AI",          desc: "Get AI-powered writing suggestions" },
+  { label: "Plagiarism",  desc: "Check your content for originality" },
+  { label: "WPS",         desc: "Average words per sentence" },
+  { label: "SPP",         desc: "Sentences per paragraph analysis" },
+  { label: "RW",          desc: "Full readability wizard report" },
 ];
 
-const OPEN_COMMISSIONS = [
-  "Independent",
-  "The Future of EVs in India — GreenMiles Co.",
-  "Top 10 Finance Hacks for Gen-Z — MoneyMind Media",
-  "AI in Healthcare — MedScope Inc.",
-  "Sustainable Fashion on a Budget — TrendLoop",
-];
-
-function countWords(html: string) {
-  return html.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length;
-}
-function readTime(words: number) {
-  return Math.max(1, Math.round(words / 200));
-}
-
-export default function WriterCreate() {
-  const { userName } = useUser();
-  const titleRef   = useRef<HTMLDivElement>(null);
-  const bodyRef    = useRef<HTMLDivElement>(null);
-
-  const [tags, setTags]             = useState<string[]>([]);
-  const [tagInput, setTagInput]     = useState("");
-  const [commission, setCommission] = useState("Independent");
+export default function WriterCreatePage() {
+  const [title, setTitle]           = useState("Untitled Article");
+  const [tags, setTags]             = useState<string[]>(["#technology"]);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
   const [wordCount, setWordCount]   = useState(0);
-  const [titleFilled, setTitleFilled] = useState(false);
-  const [toolbar, setToolbar] = useState<{ top: number; left: number; show: boolean }>({ top:0, left:0, show:false });
+  const bodyRef = useRef<HTMLDivElement>(null);
 
-  const today = new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" });
-
-  const onBodyInput = useCallback(() => {
-    if (bodyRef.current) setWordCount(countWords(bodyRef.current.innerHTML));
-  }, []);
-
-  const onTitleInput = useCallback(() => {
-    setTitleFilled(!!titleRef.current?.innerText.trim());
-  }, []);
-
-  const handleSelectionChange = useCallback(() => {
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || !sel.rangeCount) {
-      setToolbar(t => ({ ...t, show: false }));
-      return;
-    }
-    const range = sel.getRangeAt(0);
-    if (!bodyRef.current?.contains(range.commonAncestorContainer)) {
-      setToolbar(t => ({ ...t, show: false }));
-      return;
-    }
-    const rect     = range.getBoundingClientRect();
-    const bodyEl   = bodyRef.current;
-    const canvas   = bodyEl?.closest(".create-canvas");
-    const canvasRect = canvas?.getBoundingClientRect() ?? { top:0, left:0 };
-    setToolbar({
-      show: true,
-      top:  rect.top  - canvasRect.top  - 52,
-      left: rect.left - canvasRect.left + rect.width / 2,
-    });
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener("selectionchange", handleSelectionChange);
-    return () => document.removeEventListener("selectionchange", handleSelectionChange);
-  }, [handleSelectionChange]);
-
-  const exec = (cmd: string, value?: string) => {
-    document.execCommand(cmd, false, value);
-    bodyRef.current?.focus();
-    onBodyInput();
+  const addTag = (tag: string) => {
+    if (!tags.includes(tag)) setTags(prev => [...prev, tag]);
   };
 
-  const addKeyword = (kw: string) => {
-    if (!tags.includes(kw)) setTags(p => [...p, kw]);
+  const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag));
+
+  const handleBodyInput = () => {
+    const text = bodyRef.current?.innerText ?? "";
+    setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
   };
 
-  const addTagFromInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      const t = tagInput.trim().replace(/,/g, "");
-      if (t && !tags.includes(t)) setTags(p => [...p, t.startsWith("#") ? t : "#"+t]);
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (t: string) => setTags(p => p.filter(x => x !== t));
-  const canPublish = titleFilled && wordCount >= 100;
+  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   return (
     <AppLayout bg="bg-white">
-      {/* create-canvas: relative container for the floating toolbar */}
-      <div className="create-canvas relative flex flex-col min-h-screen">
+      <div className="max-w-4xl mx-auto px-6 md:px-12 py-10 min-h-screen">
 
-        {/* Scrollable writing area */}
-        <div className="flex flex-1">
-          {/* Main canvas */}
-          <div className="flex-1 px-8 md:px-16 lg:px-24 pt-12 pb-8 max-w-3xl">
+        {/* Editable Title */}
+        <div
+          contentEditable
+          suppressContentEditableWarning
+          onInput={e => setTitle(e.currentTarget.textContent ?? "")}
+          className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-3 leading-tight outline-none empty:before:content-['Article_Title'] empty:before:text-gray-300 focus:empty:before:content-[''] cursor-text"
+          data-placeholder="Article Title">
+          {title === "Untitled Article" ? "" : title}
+        </div>
 
-            {/* Floating selection toolbar */}
-            {toolbar.show && (
-              <div
-                style={{ position:"absolute", top: toolbar.top, left: toolbar.left, transform:"translateX(-50%)", zIndex:50 }}
-                className="flex items-center gap-1 bg-[#111] rounded-xl px-2 py-1.5 shadow-2xl pointer-events-auto"
-                onMouseDown={e => e.preventDefault()}
-              >
-                {[
-                  { icon:<Bold size={14}/>,     cmd:"bold",               title:"Bold"        },
-                  { icon:<Italic size={14}/>,   cmd:"italic",             title:"Italic"      },
-                  { icon:<Heading2 size={14}/>, cmd:"formatBlock",        title:"Heading 2",  val:"h2" },
-                  { icon:<Heading3 size={14}/>, cmd:"formatBlock",        title:"Heading 3",  val:"h3" },
-                  { icon:<List size={14}/>,     cmd:"insertUnorderedList",title:"Bullet list" },
-                ].map(({ icon, cmd, title, val }) => (
-                  <button key={title} title={title}
-                    onMouseDown={e => { e.preventDefault(); exec(cmd, val); }}
-                    className="text-white hover:text-orange-400 p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
-                    {icon}
+        {/* Meta row */}
+        <div className="text-center text-xs text-gray-400 mb-1 space-x-1">
+          <span>Your Name</span>
+          <span>·</span>
+          <span>{today}</span>
+          <span>·</span>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-green-400 inline-block"/>
+            {Math.ceil(wordCount / 200) || 0} min read
+          </span>
+        </div>
+
+        {/* Tags row */}
+        <div className="text-center text-xs text-gray-400 mb-6 flex flex-wrap justify-center gap-1">
+          {tags.map(tag => (
+            <span key={tag} className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5">
+              {tag}
+              <button onClick={() => removeTag(tag)} className="hover:text-gray-900 cursor-pointer">
+                <X size={10}/>
+              </button>
+            </span>
+          ))}
+        </div>
+
+        {/* Black panel — keywords + writing tools, NO engagement */}
+        <div className="bg-[#1A1A1A] rounded-2xl p-5 mb-8">
+          <div className="flex flex-col md:flex-row gap-6">
+
+            {/* Keywords */}
+            <div className="flex-1">
+              <p className="text-white text-sm font-semibold mb-1">Suggested Keywords</p>
+              <p className="text-gray-500 text-xs mb-3">Click to add to your article tags</p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {SUGGESTED_KEYWORDS.map(kw => (
+                  <button key={kw} onClick={() => addTag(kw)}
+                    className={`text-xs px-3 py-1.5 rounded-full border cursor-pointer transition-all ${
+                      tags.includes(kw)
+                        ? "bg-white text-black border-white"
+                        : "bg-[#2a2a2a] text-gray-300 border-white/10 hover:border-white/40 hover:text-white"
+                    }`}>
+                    {kw} {!tags.includes(kw) && <Plus size={10} className="inline"/>}
                   </button>
                 ))}
               </div>
-            )}
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="text"
+                  placeholder="Add custom #tag and press Enter"
+                  onKeyDown={e => {
+                    if (e.key === "Enter") {
+                      const val = e.currentTarget.value.trim();
+                      if (val) { addTag(val.startsWith("#") ? val : `#${val}`); e.currentTarget.value = ""; }
+                    }
+                  }}
+                  className="flex-1 bg-[#2a2a2a] border border-white/10 rounded-full px-3 py-1.5 text-xs text-gray-300 placeholder:text-gray-600 outline-none focus:border-white/30"
+                />
+              </div>
 
-            {/* Title */}
-            <div
-              ref={titleRef}
-              contentEditable
-              suppressContentEditableWarning
-              onInput={onTitleInput}
-              data-placeholder="Your Article Title…"
-              className="text-3xl md:text-4xl font-black text-gray-900 leading-tight outline-none mb-4
-                         empty:before:content-[attr(data-placeholder)] empty:before:text-gray-300"
-            />
-
-            {/* Meta */}
-            <div className="flex items-center gap-3 text-sm text-gray-400 mb-8 pb-4 border-b border-gray-100">
-              <span className="font-medium text-gray-700">{userName || "Your Name"}</span>
-              <span>·</span>
-              <span>{today}</span>
-              <span>·</span>
-              <span>{readTime(wordCount)} min read</span>
+              {/* Writing Tools */}
+              <p className="text-gray-500 text-[10px] uppercase tracking-widest mb-2 font-semibold">Writing Tools</p>
+              <div className="flex flex-wrap gap-2">
+                {WRITER_TOOLS.map(tool => (
+                  <button key={tool.label}
+                    onClick={() => setActiveTool(activeTool === tool.label ? null : tool.label)}
+                    className={`text-xs px-3 py-1.5 rounded-full border cursor-pointer transition-all ${
+                      activeTool === tool.label
+                        ? "bg-white text-black border-white"
+                        : "bg-[#2a2a2a] text-gray-300 border-white/10 hover:border-white/40 hover:text-white"
+                    }`}>
+                    {tool.label}
+                  </button>
+                ))}
+              </div>
+              {activeTool && (
+                <p className="text-gray-500 text-xs mt-2">
+                  {WRITER_TOOLS.find(t => t.label === activeTool)?.desc}
+                </p>
+              )}
             </div>
-
-            {/* Body */}
-            <div
-              ref={bodyRef}
-              contentEditable
-              suppressContentEditableWarning
-              onInput={onBodyInput}
-              data-placeholder="Click here and start writing your article…"
-              className="min-h-[420px] text-gray-800 text-base md:text-lg leading-relaxed outline-none
-                         empty:before:content-[attr(data-placeholder)] empty:before:text-gray-300
-                         [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-gray-900
-                         [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-gray-800
-                         [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3
-                         [&_b]:font-bold [&_i]:italic"
-            />
           </div>
-
-          {/* Right keywords panel */}
-          <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 border-l border-gray-100 pt-12 px-5 self-start sticky top-0 max-h-screen overflow-y-auto">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Suggested Keywords</p>
-            <div className="flex flex-wrap gap-2">
-              {SUGGESTED_KEYWORDS.map(kw => (
-                <button key={kw} onClick={() => addKeyword(kw)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                    tags.includes(kw)
-                      ? "bg-[#111] text-white border-[#111]"
-                      : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400 hover:text-gray-900"
-                  }`}>
-                  {kw}
-                </button>
-              ))}
-            </div>
-          </aside>
         </div>
 
-        {/* Sticky bottom bar — no hardcoded left offset, lives inside main scroll area */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-8 py-3 flex flex-wrap items-center gap-4 z-30">
-          {/* Word count */}
-          <span className="text-xs text-gray-400 flex-shrink-0 tabular-nums">{wordCount} words</span>
-          <div className="h-4 w-px bg-gray-200 flex-shrink-0"/>
+        {/* Body — contentEditable, styled like article body */}
+        <div
+          ref={bodyRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={handleBodyInput}
+          className="min-h-[400px] text-sm text-gray-700 leading-loose outline-none cursor-text focus:outline-none empty:before:content-['Start_writing_your_article_here...'] empty:before:text-gray-300"
+        />
 
-          {/* Tags */}
-          <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-            {tags.map(t => (
-              <span key={t} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full">
-                {t}
-                <button onClick={() => removeTag(t)} className="text-gray-400 hover:text-gray-700 cursor-pointer leading-none ml-0.5">×</button>
-              </span>
-            ))}
-            <input
-              value={tagInput}
-              onChange={e => setTagInput(e.target.value)}
-              onKeyDown={addTagFromInput}
-              placeholder="Add tag…"
-              className="text-xs text-gray-600 outline-none bg-transparent placeholder:text-gray-300 w-20"
-            />
+        {/* Sticky bottom bar */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 mt-8 -mx-6 md:-mx-12 px-6 md:px-12 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-gray-400">{wordCount} words</span>
           </div>
-          <div className="h-4 w-px bg-gray-200 flex-shrink-0"/>
-
-          {/* Commission */}
-          <select
-            value={commission}
-            onChange={e => setCommission(e.target.value)}
-            className="text-xs text-gray-600 bg-white border border-gray-200 rounded-lg px-3 py-1.5 outline-none cursor-pointer flex-shrink-0 max-w-[220px]">
-            {OPEN_COMMISSIONS.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-
-          {/* Publish */}
-          <button
-            disabled={!canPublish}
-            title={canPublish ? "Publish article" : "Add a title and at least 100 words to publish"}
-            className={`flex-shrink-0 px-6 py-2 rounded-xl text-sm font-semibold transition-all ${
-              canPublish
-                ? "bg-[#111] text-white hover:bg-[#333] cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            }`}>
-            Publish
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="text-xs text-gray-500 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              Save Draft
+            </button>
+            <button className="text-xs bg-[#111] text-white px-4 py-2 rounded-lg hover:bg-[#333] cursor-pointer font-semibold transition-colors">
+              Publish
+            </button>
+          </div>
         </div>
 
       </div>
