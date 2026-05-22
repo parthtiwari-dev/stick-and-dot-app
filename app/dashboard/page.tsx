@@ -1,13 +1,15 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getStoredRole, dashRootPath } from "@/lib/roles";
+import { dashRootPath } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/supabase/profile";
 
 export default function DashboardRoot() {
   const router = useRouter();
   useEffect(() => {
-    const role = getStoredRole();
-    router.replace(dashRootPath(role));
+    getCurrentProfile()
+      .then(({ profile }) => router.replace(dashRootPath(profile?.role ?? "Writer")))
+      .catch(() => router.replace("/login"));
   }, [router]);
   return null;
 }

@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { rawToDash, getStoredRole } from "@/lib/roles";
+import { rawToDash } from "@/lib/roles";
 import AppLayout from "@/components/AppLayout";
 import { BookOpen, PenLine, Briefcase, FlaskConical } from "lucide-react";
+import { getCurrentProfile } from "@/lib/supabase/profile";
 
 type Role = "writer" | "business" | "reader" | "subject-expert";
-
-function storageRole(): Role { return rawToDash(getStoredRole()) as Role; }
 
 const ROLE_RESOURCES: Record<Role, {
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -64,7 +63,9 @@ export default function Resources() {
   const [role, setRole] = useState<Role>("reader");
 
   useEffect(() => {
-    setRole(storageRole());
+    getCurrentProfile()
+      .then(({ profile }) => setRole(rawToDash(profile?.role ?? "Reader") as Role))
+      .catch(() => setRole("reader"));
   }, []);
 
   const { icon: Icon, heading, subtitle, items } = ROLE_RESOURCES[role];

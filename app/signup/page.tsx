@@ -3,9 +3,11 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { type RawRole, RAW_ROLES } from "@/lib/roles";
+import { dashRootPath, type RawRole, RAW_ROLES } from "@/lib/roles";
+import { createClient } from "@/lib/supabase/client";
 
 const inp = "w-full border-b border-gray-300 bg-transparent outline-none focus:border-black py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors";
+type OAuthProvider = "google" | "facebook" | "apple";
 
 function Inner() {
   const router = useRouter();
@@ -16,15 +18,47 @@ function Inner() {
   const [pwError, setPwError]   = useState("");
   const [loading, setLoading]   = useState(false);
 
+  const handleOAuth = async (provider: OAuthProvider) => {
+    setPwError("");
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const redirectTo = `${window.location.origin}/auth/callback?role=${encodeURIComponent(role)}&next=${encodeURIComponent(dashRootPath(role))}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo },
+      });
+      if (error) setPwError(error.message);
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Unable to start social sign in.");
+      setLoading(false);
+    }
+  };
+
   const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) { setPwError("Password must be at least 6 characters."); return; }
     setPwError("");
     setLoading(true);
-    try { localStorage.setItem("sd_role", role); } catch (_) {}
-    await new Promise(r => setTimeout(r, 400));
-    setLoading(false);
-    router.push(`/signup/otp?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`);
+    try {
+      const supabase = createClient();
+      const next = `/signup/details?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`;
+      const emailRedirectTo = `${window.location.origin}/auth/callback?role=${encodeURIComponent(role)}&next=${encodeURIComponent(next)}`;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo,
+          data: { role },
+        },
+      });
+      if (error) throw error;
+      router.push(`/signup/otp?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`);
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Unable to create account.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -92,6 +126,8 @@ function Inner() {
             <div className="flex gap-3 mb-6">
               {[{label:"Apple",icon:"🍎"},{label:"Google",icon:"G"},{label:"Facebook",icon:"f"}].map(({label,icon}) => (
                 <button key={label}
+                  type="button"
+                  onClick={() => handleOAuth(label.toLowerCase() as OAuthProvider)}
                   className="flex-1 py-3 border border-gray-200 rounded-xl flex items-center justify-center text-sm font-semibold hover:bg-gray-50 cursor-pointer transition-colors">
                   {icon}
                 </button>

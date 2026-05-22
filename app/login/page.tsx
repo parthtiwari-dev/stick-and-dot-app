@@ -4,8 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { type RawRole, RAW_ROLES, dashRootPath } from "@/lib/roles";
+import { createClient } from "@/lib/supabase/client";
+import { getCurrentProfile, upsertCurrentProfile } from "@/lib/supabase/profile";
 
 const inp = "w-full border-b border-gray-300 bg-transparent outline-none focus:border-black py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors";
+type OAuthProvider = "google" | "facebook" | "apple";
 
 function Inner() {
   const router = useRouter();
@@ -16,15 +19,67 @@ function Inner() {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
 
+  const handleOAuth = async (provider: OAuthProvider) => {
+    setError("");
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const redirectTo = `${window.location.origin}/auth/callback?role=${encodeURIComponent(role)}&next=${encodeURIComponent(dashRootPath(role))}`;
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo },
+      });
+      if (oauthError) setError(oauthError.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to start social sign in.");
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Please fill in all fields."); return; }
     setError("");
     setLoading(true);
-    try { localStorage.setItem("sd_role", role); } catch (_) {}
-    await new Promise(r => setTimeout(r, 500));
-    setLoading(false);
-    router.push(dashRootPath(role));
+    try {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+
+      const { profile } = await getCurrentProfile();
+      const resolvedProfile = profile ?? await upsertCurrentProfile({ role, email });
+
+      if (resolvedProfile.role !== role) {
+        await supabase.auth.signOut();
+        setError(`This account is registered as ${resolvedProfile.role}. Select that role to sign in.`);
+        return;
+      }
+
+      router.push(dashRootPath(resolvedProfile.role));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to sign in.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Enter your email first.");
+      return;
+    }
+
+    setError("");
+    try {
+      const supabase = createClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (resetError) throw resetError;
+      setError("Password reset email sent.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to send reset email.");
+    }
   };
 
   return (
@@ -92,6 +147,8 @@ function Inner() {
             <div className="flex gap-3 mb-6">
               {[{label:"Apple",icon:"🍎"},{label:"Google",icon:"G"},{label:"Facebook",icon:"f"}].map(({label,icon}) => (
                 <button key={label} aria-label={label}
+                  type="button"
+                  onClick={() => handleOAuth(label.toLowerCase() as OAuthProvider)}
                   className="flex-1 py-3 border border-gray-200 rounded-xl flex items-center justify-center text-sm font-semibold hover:bg-gray-50 cursor-pointer transition-colors">
                   {icon}
                 </button>
@@ -115,7 +172,7 @@ function Inner() {
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="Your password" className={inp} required/>
                 <div className="text-right mt-1.5">
-                  <button type="button" className="text-xs text-gray-400 hover:text-black transition-colors cursor-pointer">
+                  <button type="button" onClick={handleForgotPassword} className="text-xs text-gray-400 hover:text-black transition-colors cursor-pointer">
                     Forgot password?
                   </button>
                 </div>

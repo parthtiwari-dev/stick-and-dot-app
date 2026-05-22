@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -13,9 +13,10 @@ import {
   dashRoleFromPath,
   rawToDash,
   getStoredRole,
-  hasSession,
   clearSession,
 } from "@/lib/roles";
+import { createClient } from "@/lib/supabase/client";
+import { hasSupabaseConfig } from "@/lib/supabase/config";
 
 type NavItem = { label: string; href: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> };
 
@@ -59,16 +60,16 @@ interface Props { collapsed: boolean; onToggle: () => void; }
 export default function AppSidebar({ collapsed, onToggle }: Props) {
   const pathname  = usePathname();
   const router    = useRouter();
-  const [role, setRole]       = useState<DashRole>("writer");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const fromPath = dashRoleFromPath(pathname);
+  const role = fromPath ?? rawToDash(getStoredRole());
 
-  useEffect(() => {
-    const fromPath = dashRoleFromPath(pathname);
-    setRole(fromPath ?? rawToDash(getStoredRole()));
-    setLoggedIn(hasSession());
-  }, [pathname]);
-
-  const handleLogout = () => { clearSession(); router.push("/login"); };
+  const handleLogout = async () => {
+    if (hasSupabaseConfig()) {
+      await createClient().auth.signOut();
+    }
+    clearSession();
+    router.push("/login");
+  };
 
   const navItems    = NAV[role];
   const profileHref = PROFILE_HREF[role];

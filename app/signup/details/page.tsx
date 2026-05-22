@@ -3,6 +3,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
 import { type RawRole, RAW_ROLES, dashRootPath } from "@/lib/roles";
+import { upsertCurrentProfile } from "@/lib/supabase/profile";
 
 const inp = "w-full border-b border-gray-300 bg-transparent outline-none focus:border-black py-2 text-sm text-gray-900 placeholder:text-gray-400 transition-colors";
 
@@ -13,6 +14,7 @@ function Inner() {
   const email  = sp.get("email") || "";
   const [form, setForm] = useState({ name:"", mobile:"", domain:"", gender:"", dob:"" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const set = (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -21,12 +23,17 @@ function Inner() {
   // Writer and Subject Expert go to expertise step; Reader and Client go straight to dashboard
   const needsExpertise = role === "Writer" || role === "Subject Expert";
 
-  const go = (name: string) => {
-    try {
-      localStorage.setItem("sd_role", role);
-      if (name)  localStorage.setItem("sd_name", name);
-      if (email) localStorage.setItem("sd_email", email);
-    } catch (_) {}
+  const go = async (name: string) => {
+    await upsertCurrentProfile({
+      role,
+      email,
+      name,
+      mobile: form.mobile,
+      domain: form.domain,
+      gender: form.gender,
+      dob: form.dob,
+    });
+
     if (needsExpertise) {
       router.push(
         `/signup/expertise?role=${encodeURIComponent(role)}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`
@@ -38,10 +45,15 @@ function Inner() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    setLoading(false);
-    go(form.name);
+    try {
+      await go(form.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to save profile.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,7 +126,8 @@ function Inner() {
                 className="w-full py-4 rounded-xl bg-[#111] text-white text-sm font-semibold hover:bg-[#333] disabled:opacity-50 transition-all cursor-pointer">
                 {loading ? "Saving…" : needsExpertise ? "Continue →" : "Finish Setup"}
               </button>
-              <button type="button" onClick={() => go("")}
+              {error && <p className="text-xs text-red-500 -mt-2">{error}</p>}
+              <button type="button" onClick={() => { void go("").catch(err => setError(err instanceof Error ? err.message : "Unable to skip.")); }}
                 className="text-sm text-gray-500 hover:text-black text-center transition-colors cursor-pointer underline">
                 Skip for now
               </button>

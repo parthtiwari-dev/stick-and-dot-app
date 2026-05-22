@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
 import { type RawRole, RAW_ROLES, dashRootPath } from "@/lib/roles";
 import { Upload, CheckCircle } from "lucide-react";
+import { updateCurrentProfile, uploadProfileFile } from "@/lib/supabase/profile";
 
 const DOMAINS = [
   "Technology","Finance","Medical / Health","Law","Science",
@@ -20,6 +21,7 @@ function Inner() {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const [file, setFile]       = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const toggleDomain = (d: string) =>
@@ -31,24 +33,29 @@ function Inner() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
     try {
-      localStorage.setItem("sd_role", role);
-      if (name)  localStorage.setItem("sd_name", name);
-      if (email) localStorage.setItem("sd_email", email);
-    } catch (_) {}
-    await new Promise(r => setTimeout(r, 600));
-    setLoading(false);
-    router.push(dashRootPath(role));
+      const uploadedPath = file ? await uploadProfileFile(file) : null;
+      await updateCurrentProfile({
+        role,
+        name,
+        email,
+        expertise_domains: selectedDomains,
+        credential_file_path: uploadedPath,
+      });
+      router.push(dashRootPath(role));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to save expertise.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSkip = () => {
-    try {
-      localStorage.setItem("sd_role", role);
-      if (name)  localStorage.setItem("sd_name", name);
-      if (email) localStorage.setItem("sd_email", email);
-    } catch (_) {}
-    router.push(dashRootPath(role));
+    void updateCurrentProfile({ role, name, email })
+      .then(() => router.push(dashRootPath(role)))
+      .catch(err => setError(err instanceof Error ? err.message : "Unable to skip."));
   };
 
   const isWriter = role === "Writer";
@@ -162,6 +169,8 @@ function Inner() {
                 className="w-full py-4 rounded-xl bg-[#111] text-white text-sm font-semibold hover:bg-[#333] disabled:opacity-50 transition-all cursor-pointer">
                 {loading ? "Saving…" : `Continue as ${stepLabel}`}
               </button>
+
+              {error && <p className="text-xs text-red-500 -mt-2">{error}</p>}
 
               <button type="button" onClick={handleSkip}
                 className="text-sm text-gray-500 hover:text-black text-center transition-colors cursor-pointer underline">

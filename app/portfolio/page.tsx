@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getStoredRole } from "@/lib/roles";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getCurrentProfile } from "@/lib/supabase/profile";
 
 const CARDS = [
   { id:"1", title:"The Silent Revolution in Neural Computing", author:"Shaivya Saini", mins:"8",  tag:"Technology", rating:4.8, views:"12.4K" },
@@ -24,11 +24,13 @@ export default function PortfolioPage() {
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
-    try {
-      const r = getStoredRole();
+    getCurrentProfile()
+      .then(({ profile }) => {
+      const r = profile?.role;
       if (r === "Writer" || r === "Subject Expert") { setAllowed(true); }
       else { router.replace("/dashboard/reader"); }
-    } catch (_) { router.replace("/login"); }
+      })
+      .catch(() => router.replace("/login"));
   }, [router]);
 
   if (!allowed) return null;

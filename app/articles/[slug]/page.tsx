@@ -3,7 +3,8 @@ import { useState, useEffect, Suspense } from "react";
 import { Star, LayoutDashboard, Compass, FilePlus, Settings, FolderOpen, BookOpen, ClipboardList, Users, Upload, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getStoredRole, rawToDash } from "@/lib/roles";
+import { rawToDash } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/supabase/profile";
 
 function Stars({ n, size = 12 }: { n: number; size?: number }) {
   return (
@@ -78,7 +79,11 @@ function ArticlePageInner() {
   const searchParams = useSearchParams();
   const isOwnArticle = searchParams.get("own") === "1";
 
-  useEffect(()=>{ setRole(rawToDash(getStoredRole())); }, []);
+  useEffect(()=>{
+    getCurrentProfile()
+      .then(({ profile }) => setRole(rawToDash(profile?.role ?? "Reader")))
+      .catch(() => setRole("reader"));
+  }, []);
 
   const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.reader;
   const isWriterOwner = role === "writer" && isOwnArticle;

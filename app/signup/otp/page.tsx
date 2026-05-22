@@ -3,6 +3,8 @@ import { useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
 import { type RawRole, RAW_ROLES } from "@/lib/roles";
+import { createClient } from "@/lib/supabase/client";
+import { upsertCurrentProfile } from "@/lib/supabase/profile";
 
 function Inner() {
   const router = useRouter();
@@ -11,6 +13,7 @@ function Inner() {
   const email = sp.get("email") || "you@example.com";
   const [digits, setDigits] = useState<string[]>(["","","","","",""]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const setRef = (el: HTMLInputElement | null, i: number) => { inputRefs.current[i] = el; };
@@ -36,10 +39,47 @@ function Inner() {
 
   const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
+    const token = digits.join("");
+    if (token.length !== 6) {
+      setError("Enter the 6 digit code.");
+      return;
+    }
+
+    setError("");
     setLoading(true);
-    await new Promise(r => setTimeout(r, 500));
-    setLoading(false);
-    router.push(`/signup/details?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`);
+    try {
+      const supabase = createClient();
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "signup",
+      });
+      if (verifyError) throw verifyError;
+      await upsertCurrentProfile({ role, email });
+      router.push(`/signup/details?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to verify code.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setError("");
+    try {
+      const supabase = createClient();
+      const next = `/signup/details?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`;
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?role=${encodeURIComponent(role)}&next=${encodeURIComponent(next)}`,
+        },
+      });
+      if (resendError) throw resendError;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to resend code.");
+    }
   };
 
   return (
@@ -97,9 +137,10 @@ function Inner() {
                 className="w-full py-4 rounded-xl bg-[#111] text-white text-sm font-semibold hover:bg-[#333] disabled:opacity-50 transition-all cursor-pointer">
                 {loading ? "Verifying…" : "Continue"}
               </button>
+              {error && <p className="text-xs text-red-500 mt-3 text-center">{error}</p>}
               <p className="text-center mt-4 text-sm text-gray-400">
                 Didn&apos;t receive code?{" "}
-                <button type="button" className="text-black font-semibold hover:underline cursor-pointer">
+                <button type="button" onClick={handleResend} className="text-black font-semibold hover:underline cursor-pointer">
                   Resend Code
                 </button>
               </p>

@@ -1,8 +1,9 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DashRole } from "@/lib/roles";
-import { getStoredRole, rawToDash, dashRootPath } from "@/lib/roles";
+import { cacheSession, dashRootPath, rawToDash } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/supabase/profile";
 
 interface Props {
   /** The DashRole this section of the app is allowed for */
@@ -12,29 +13,46 @@ interface Props {
 
 /**
  * Wrap every role-specific dashboard section with this guard.
- * If the stored role doesn't match `requiredRole`, the user is
- * silently redirected to their own dashboard — no cross-role leakage.
+ * Supabase profile role is the source of truth for dashboard access.
  */
 export default function RoleGuard({ requiredRole, children }: Props) {
   const router = useRouter();
+  const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
-    const stored = getStoredRole();
-    const userDash = rawToDash(stored);
+    let alive = true;
 
-    if (!stored) {
-      // Not logged in at all — send to login
-      router.replace("/login");
-      return;
+    async function checkRole() {
+      const { user, profile } = await getCurrentProfile().catch(() => ({
+        user: null,
+        profile: null,
+      }));
+
+      if (!alive) return;
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      const role = profile?.role ?? "Writer";
+      cacheSession({ role, name: profile?.name, email: profile?.email ?? user.email });
+
+      if (rawToDash(role) !== requiredRole) {
+        router.replace(dashRootPath(role));
+        return;
+      }
+
+      setAllowed(true);
     }
 
-    if (userDash !== requiredRole) {
-      // Logged in but wrong role — send to their own dashboard
-      router.replace(dashRootPath(stored));
-    }
+    void checkRole();
+
+    return () => {
+      alive = false;
+    };
   }, [requiredRole, router]);
 
-  // While the check runs, render nothing to avoid flashing wrong content
-  // (in real auth this would be a loading spinner)
-  return <>{children}</>;
+  return allowed ? <>{children}</> : null;
 }
+
