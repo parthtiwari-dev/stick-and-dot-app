@@ -1,19 +1,30 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { dashRootPath } from "@/lib/roles";
+import { formatReadTime, listMyArticles, STATUS_LABELS } from "@/lib/supabase/articles";
 
 const TAGS = ["All", "#Technology", "#Finance", "#Design", "#AI", "#Career"];
 
-const ARTICLES = [
-  { id:"1", title:"The Silent Revolution in Neural Computing",     author:"You", tags:["#technology","#AI"],      readTime:"8 min",  status:"Published" },
-  { id:"2", title:"How Minimalism Took Over the Design World",     author:"You", tags:["#design","#culture"],     readTime:"6 min",  status:"Published" },
-  { id:"3", title:"The Hidden Economics of Attention",             author:"You", tags:["#finance","#psychology"],  readTime:"10 min", status:"Pending"   },
-  { id:"4", title:"Why Great Ideas Die in Meetings",               author:"You", tags:["#career","#productivity"], readTime:"5 min",  status:"Draft"     },
-  { id:"5", title:"Building Systems That Last",                    author:"You", tags:["#technology","#career"],  readTime:"7 min",  status:"Published" },
-  { id:"6", title:"The Attention Economy and What It Costs Us",    author:"You", tags:["#AI","#society"],         readTime:"9 min",  status:"Pending"   },
+type PortfolioArticle = {
+  id: string;
+  slug: string;
+  title: string;
+  author: string;
+  tags: string[];
+  readTime: string;
+  status: string;
+};
+
+const FALLBACK_ARTICLES: PortfolioArticle[] = [
+  { id:"1", slug:"1", title:"The Silent Revolution in Neural Computing",     author:"You", tags:["#technology","#AI"],      readTime:"8 min",  status:"Published" },
+  { id:"2", slug:"2", title:"How Minimalism Took Over the Design World",     author:"You", tags:["#design","#culture"],     readTime:"6 min",  status:"Published" },
+  { id:"3", slug:"3", title:"The Hidden Economics of Attention",             author:"You", tags:["#finance","#psychology"],  readTime:"10 min", status:"Pending"   },
+  { id:"4", slug:"4", title:"Why Great Ideas Die in Meetings",               author:"You", tags:["#career","#productivity"], readTime:"5 min",  status:"Draft"     },
+  { id:"5", slug:"5", title:"Building Systems That Last",                    author:"You", tags:["#technology","#career"],  readTime:"7 min",  status:"Published" },
+  { id:"6", slug:"6", title:"The Attention Economy and What It Costs Us",    author:"You", tags:["#AI","#society"],         readTime:"9 min",  status:"Pending"   },
 ];
 
 const CARDS_PER_PAGE = 6;
@@ -27,10 +38,32 @@ const statusBadge = (s: string) => {
 export default function WriterPortfolioPage() {
   const [activeTag, setActiveTag] = useState("All");
   const [page, setPage] = useState(0);
+  const [articles, setArticles] = useState<PortfolioArticle[]>(FALLBACK_ARTICLES);
+
+  useEffect(() => {
+    let alive = true;
+    listMyArticles()
+      .then(rows => {
+        if (!alive || rows.length === 0) return;
+        setArticles(rows.map(row => ({
+          id: row.id,
+          slug: row.slug,
+          title: row.title,
+          author: "You",
+          tags: row.tags.length ? row.tags : [`#${row.domain_name}`],
+          readTime: formatReadTime(row.read_time_minutes),
+          status: STATUS_LABELS[row.status],
+        })));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const filtered = activeTag === "All"
-    ? ARTICLES
-    : ARTICLES.filter(a => a.tags.some(t => t.toLowerCase() === activeTag.toLowerCase()));
+    ? articles
+    : articles.filter(a => a.tags.some(t => t.toLowerCase() === activeTag.toLowerCase()));
 
   const totalPages = Math.ceil(filtered.length / CARDS_PER_PAGE);
   const visible = filtered.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
@@ -84,7 +117,7 @@ export default function WriterPortfolioPage() {
             {visible.map(a => (
               <Link
                 key={a.id}
-                href={`/articles/${a.id}?own=1`}
+                href={`/articles/${a.slug}?own=1`}
                 className="group relative block bg-white border border-[#e5e7eb] rounded-[12px] overflow-hidden
                            shadow-[0_1px_3px_rgba(0,0,0,0.06)]
                            hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] hover:-translate-y-0.5

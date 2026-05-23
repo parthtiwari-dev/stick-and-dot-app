@@ -1,28 +1,42 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { listWriterDirectory, type WriterDirectoryRow } from "@/lib/supabase/commissions";
 
 const FILTER_DOMAINS = ["All","Technology","Finance","Medical","Science","Business","Law","Education"];
 
-const WRITERS = [
-  { name:"Daffa Naufal",  domain:"Technology", email:"daffanaufal@gmail.com",  phone:"+91 98765 43210", articles:34, rating:4.8 },
-  { name:"Shakir Ramzi",  domain:"Finance",    email:"shakirramzi@gmail.com",  phone:"+91 87654 32109", articles:21, rating:4.6 },
-  { name:"Zara Annisa",   domain:"Business",   email:"annisasara@gmail.com",   phone:"+91 76543 21098", articles:18, rating:4.7 },
-  { name:"Chris Evans",   domain:"Science",    email:"chrisevans@gmail.com",   phone:"+91 65432 10987", articles:29, rating:4.5 },
-  { name:"Jack Miller",   domain:"Medical",    email:"jackmiller@gmail.com",   phone:"+91 54321 09876", articles:12, rating:4.3 },
-  { name:"Richard Kyle",  domain:"Technology", email:"ricardkyle@gmail.com",   phone:"+91 43210 98765", articles:41, rating:4.9 },
-  { name:"Priya Mehta",   domain:"Finance",    email:"priyamehta@gmail.com",   phone:"+91 32109 87654", articles:16, rating:4.4 },
-  { name:"Brian Dawn",    domain:"Law",        email:"briandawn@gmail.com",    phone:"+91 21098 76543", articles:9,  rating:4.2 },
-  { name:"Riya Sharma",   domain:"Education",  email:"riyasharma@gmail.com",   phone:"+91 10987 65432", articles:23, rating:4.6 },
+const WRITERS: WriterDirectoryRow[] = [
+  { id:"fallback-1", name:"Daffa Naufal",  domain:"Technology", email:"daffanaufal@gmail.com",  phone:"+91 98765 43210", articles:34, rating:4.8 },
+  { id:"fallback-2", name:"Shakir Ramzi",  domain:"Finance",    email:"shakirramzi@gmail.com",  phone:"+91 87654 32109", articles:21, rating:4.6 },
+  { id:"fallback-3", name:"Zara Annisa",   domain:"Business",   email:"annisasara@gmail.com",   phone:"+91 76543 21098", articles:18, rating:4.7 },
+  { id:"fallback-4", name:"Chris Evans",   domain:"Science",    email:"chrisevans@gmail.com",   phone:"+91 65432 10987", articles:29, rating:4.5 },
+  { id:"fallback-5", name:"Jack Miller",   domain:"Medical",    email:"jackmiller@gmail.com",   phone:"+91 54321 09876", articles:12, rating:4.3 },
+  { id:"fallback-6", name:"Richard Kyle",  domain:"Technology", email:"ricardkyle@gmail.com",   phone:"+91 43210 98765", articles:41, rating:4.9 },
+  { id:"fallback-7", name:"Priya Mehta",   domain:"Finance",    email:"priyamehta@gmail.com",   phone:"+91 32109 87654", articles:16, rating:4.4 },
+  { id:"fallback-8", name:"Brian Dawn",    domain:"Law",        email:"briandawn@gmail.com",    phone:"+91 21098 76543", articles:9,  rating:4.2 },
+  { id:"fallback-9", name:"Riya Sharma",   domain:"Education",  email:"riyasharma@gmail.com",   phone:"+91 10987 65432", articles:23, rating:4.6 },
 ];
 
 export default function BusinessWriters() {
   const [search, setSearch] = useState("");
   const [domain, setDomain] = useState("All");
+  const [writers, setWriters] = useState<WriterDirectoryRow[]>(WRITERS);
 
-  const filtered = WRITERS.filter(w => {
+  useEffect(() => {
+    let alive = true;
+    listWriterDirectory()
+      .then(rows => {
+        if (alive && rows.length) setWriters(rows);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtered = writers.filter(w => {
     const matchDomain = domain === "All" || w.domain === domain;
     const matchSearch = !search.trim() ||
       w.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -108,7 +122,7 @@ export default function BusinessWriters() {
             <p className="text-center text-gray-400 text-sm py-8">No writers match your filters.</p>
           )}
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-400">Showing {filtered.length} of {WRITERS.length} writers</p>
+            <p className="text-xs text-gray-400">Showing {filtered.length} of {writers.length} writers</p>
             <div className="flex gap-1">
               <button className="text-xs text-gray-400 px-3 py-1 rounded-lg hover:bg-gray-100 cursor-pointer">Previous</button>
               <button className="text-xs bg-[#F97316] text-white px-3 py-1 rounded-lg cursor-pointer">1</button>

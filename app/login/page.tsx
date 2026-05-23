@@ -1,5 +1,5 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -9,6 +9,7 @@ import { getCurrentProfile, upsertCurrentProfile } from "@/lib/supabase/profile"
 
 const inp = "w-full border-b border-gray-300 bg-transparent outline-none focus:border-black py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors";
 type OAuthProvider = "google" | "facebook" | "apple";
+type DevAccount = { key: string; label: string; role: RawRole; email: string; next: string };
 
 function Inner() {
   const router = useRouter();
@@ -18,6 +19,18 @@ function Inner() {
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
+  const [devAccounts, setDevAccounts] = useState<DevAccount[]>([]);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED !== "true") return;
+
+    fetch("/api/dev-auth/accounts")
+      .then(res => res.json())
+      .then((data: { enabled?: boolean; accounts?: DevAccount[] }) => {
+        if (data.enabled) setDevAccounts(data.accounts ?? []);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleOAuth = async (provider: OAuthProvider) => {
     setError("");
@@ -79,6 +92,25 @@ function Inner() {
       setError("Password reset email sent.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to send reset email.");
+    }
+  };
+
+  const handleDevLogin = async (key: string) => {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/dev-auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key }),
+      });
+      const data = await res.json() as { next?: string; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Unable to use dev login.");
+      router.push(data.next ?? "/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to use dev login.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -183,6 +215,26 @@ function Inner() {
                 {loading ? "Signing in…" : "Sign In"}
               </button>
             </form>
+
+            {devAccounts.length > 0 && (
+              <div className="mt-6 pt-5 border-t border-gray-100">
+                <p className="text-xs text-gray-400 mb-3">Dev mode quick login</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {devAccounts.map(account => (
+                    <button
+                      key={account.key}
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleDevLogin(account.key)}
+                      className="text-xs border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
+                      title={account.email}
+                    >
+                      {account.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Mobile: already have account? */}
             <p className="md:hidden text-center text-xs text-gray-400 mt-6">

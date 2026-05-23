@@ -3,6 +3,7 @@ import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { createReadingList } from "@/lib/supabase/reading";
 
 const GENRES = ["Technology","Finance","Health","Science","Culture","Politics","Business","Sports","Other"];
 
@@ -14,11 +15,37 @@ export default function ReaderCreateList() {
   const [genre, setGenre]           = useState("");
   const [isPrivate, setIsPrivate]   = useState(false);
   const [articles, setArticles]     = useState<ArticleSlot[]>([{ id: 1, title: "", note: "" }]);
+  const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const addArticle    = () => setArticles(p => [...p, { id: Date.now(), title: "", note: "" }]);
   const removeArticle = (id: number) => setArticles(p => p.filter(a => a.id !== id));
   const updArticle    = (id: number, field: "title" | "note", v: string) =>
     setArticles(p => p.map(a => a.id === id ? { ...a, [field]: v } : a));
+
+  const handleSubmit = async () => {
+    setNotice("");
+    setLoading(true);
+    try {
+      await createReadingList({
+        name: listName,
+        description,
+        genre,
+        isPrivate,
+        articleTitles: articles,
+      });
+      setListName("");
+      setDesc("");
+      setGenre("");
+      setIsPrivate(false);
+      setArticles([{ id: 1, title: "", note: "" }]);
+      setNotice("Reading list created.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Unable to create reading list.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const inp = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 bg-white placeholder:text-gray-300 transition-colors";
 
@@ -105,8 +132,13 @@ export default function ReaderCreateList() {
             <PlusCircle size={16} />Add another article
           </button>
 
-          <button className="w-full py-4 bg-[#111] text-white rounded-xl text-sm font-semibold hover:bg-[#333] transition-colors cursor-pointer mt-2">
-            Create List
+          {notice && <p className="text-xs text-gray-500">{notice}</p>}
+          <button
+            disabled={loading}
+            onClick={handleSubmit}
+            className="w-full py-4 bg-[#111] text-white rounded-xl text-sm font-semibold hover:bg-[#333] disabled:opacity-50 transition-colors cursor-pointer mt-2"
+          >
+            {loading ? "Creating..." : "Create List"}
           </button>
         </div>
       </div>

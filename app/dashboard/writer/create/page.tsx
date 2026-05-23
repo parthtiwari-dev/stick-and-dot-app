@@ -2,6 +2,8 @@
 import { useState, useRef } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Plus, X } from "lucide-react";
+import { useUser } from "@/components/UserContext";
+import { saveArticle } from "@/lib/supabase/articles";
 
 const SUGGESTED_KEYWORDS = ["#technology", "#tech", "#Career", "#innovation", "#future", "#AI", "#coding"];
 
@@ -16,10 +18,13 @@ const WRITER_TOOLS = [
 ];
 
 export default function WriterCreatePage() {
+  const { userName } = useUser();
   const [title, setTitle]           = useState("Untitled Article");
   const [tags, setTags]             = useState<string[]>(["#technology"]);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [wordCount, setWordCount]   = useState(0);
+  const [loadingAction, setLoadingAction] = useState<"draft" | "submit" | null>(null);
+  const [notice, setNotice] = useState("");
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const addTag = (tag: string) => {
@@ -31,6 +36,25 @@ export default function WriterCreatePage() {
   const handleBodyInput = () => {
     const text = bodyRef.current?.innerText ?? "";
     setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
+  };
+
+  const handleSave = async (action: "draft" | "submit") => {
+    setNotice("");
+    setLoadingAction(action);
+    try {
+      const body = bodyRef.current?.innerText ?? "";
+      const article = await saveArticle({
+        title,
+        body,
+        tags,
+        action,
+      });
+      setNotice(action === "draft" ? "Draft saved." : article.status === "published" ? "Article published." : "Article submitted for SME review.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Unable to save article.");
+    } finally {
+      setLoadingAction(null);
+    }
   };
 
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -51,7 +75,7 @@ export default function WriterCreatePage() {
 
         {/* Meta row */}
         <div className="text-center text-xs text-gray-400 mb-1 space-x-1">
-          <span>Your Name</span>
+          <span>{userName || "Your Name"}</span>
           <span>·</span>
           <span>{today}</span>
           <span>·</span>
@@ -144,13 +168,22 @@ export default function WriterCreatePage() {
         <div className="sticky bottom-0 bg-white border-t border-gray-100 mt-8 -mx-6 md:-mx-12 px-6 md:px-12 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-xs text-gray-400">{wordCount} words</span>
+            {notice && <span className="text-xs text-gray-500">{notice}</span>}
           </div>
           <div className="flex items-center gap-2">
-            <button className="text-xs text-gray-500 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-              Save Draft
+            <button
+              disabled={loadingAction !== null}
+              onClick={() => handleSave("draft")}
+              className="text-xs text-gray-500 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+            >
+              {loadingAction === "draft" ? "Saving…" : "Save Draft"}
             </button>
-            <button className="text-xs bg-[#111] text-white px-4 py-2 rounded-lg hover:bg-[#333] cursor-pointer font-semibold transition-colors">
-              Publish
+            <button
+              disabled={loadingAction !== null}
+              onClick={() => handleSave("submit")}
+              className="text-xs bg-[#111] text-white px-4 py-2 rounded-lg hover:bg-[#333] disabled:opacity-50 cursor-pointer font-semibold transition-colors"
+            >
+              {loadingAction === "submit" ? "Submitting…" : "Publish"}
             </button>
           </div>
         </div>

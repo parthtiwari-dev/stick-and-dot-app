@@ -1,12 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
+import { COMMISSION_STATUS_LABELS, createCommission, formatDueDate, formatMoney, listMyCommissions } from "@/lib/supabase/commissions";
 
 const DOMAINS = ["Technology","Finance","Medical / Health","Law","Science","Business","Education","Culture","Other"];
 
-const ACTIVE_ORDERS = [
+type ActiveOrder = { topic:string; writer:string; status:string; deadline:string; payment:string; statusColor:string };
+
+const ACTIVE_ORDERS: ActiveOrder[] = [
   { topic:"The Future of EVs in India",         writer:"Ravi M.",    status:"In Progress",       deadline:"Apr 20", payment:"₹4,500", statusColor:"text-blue-500"   },
   { topic:"Top 10 Finance Hacks for Gen-Z",     writer:"—",          status:"Open",              deadline:"Apr 24", payment:"₹3,200", statusColor:"text-gray-400"   },
   { topic:"AI in Healthcare: What Doctors Say", writer:"Priya K.",   status:"Under SME Review",  deadline:"Apr 30", payment:"₹6,000", statusColor:"text-orange-500" },
@@ -22,10 +25,71 @@ export default function BusinessCommission() {
   const [wordCount, setWordCount] = useState("");
   const [payment, setPayment]   = useState("");
   const [instructions, setInstructions] = useState<Instruction[]>([{ id: 1, value: "" }]);
+  const [orders, setOrders] = useState<ActiveOrder[]>(ACTIVE_ORDERS);
+  const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    listMyCommissions()
+      .then(rows => {
+        if (!alive || rows.length === 0) return;
+        setOrders(rows.map(row => ({
+          topic: row.topic,
+          writer: row.writer_name,
+          status: COMMISSION_STATUS_LABELS[row.status],
+          deadline: formatDueDate(row.due_date),
+          payment: formatMoney(row.payment_amount, row.payment_currency),
+          statusColor:
+            row.status === "open" ? "text-gray-400" :
+            row.status === "delivered" || row.status === "completed" ? "text-green-500" :
+            row.status === "under_sme_review" || row.status === "submitted" ? "text-orange-500" :
+            "text-blue-500",
+        })));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const addRow    = () => setInstructions(p => [...p, { id: Date.now(), value: "" }]);
   const updateRow = (id: number, val: string) =>
     setInstructions(p => p.map(i => i.id === id ? { ...i, value: val } : i));
+
+  const handleSubmit = async () => {
+    setNotice("");
+    setLoading(true);
+    try {
+      const row = await createCommission({
+        topic,
+        domain,
+        dueDate,
+        wordCount,
+        payment,
+        instructions: instructions.map(item => item.value),
+      });
+      setOrders(prev => [{
+        topic: row.topic,
+        writer: "-",
+        status: COMMISSION_STATUS_LABELS[row.status],
+        deadline: formatDueDate(row.due_date),
+        payment: formatMoney(row.payment_amount, row.payment_currency),
+        statusColor: "text-gray-400",
+      }, ...prev]);
+      setTopic("");
+      setDomain("");
+      setDueDate("");
+      setWordCount("");
+      setPayment("");
+      setInstructions([{ id: 1, value: "" }]);
+      setNotice("Commission posted.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Unable to post commission.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const inp = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 bg-white placeholder:text-gray-300 transition-colors";
 
@@ -92,8 +156,13 @@ export default function BusinessCommission() {
               placeholder="e.g. ₹4,500 or $60" className={inp}/>
           </div>
 
-          <button className="w-full py-4 bg-[#111] text-white rounded-xl text-sm font-semibold hover:bg-[#333] transition-colors cursor-pointer mt-2">
-            Post Commission
+          {notice && <p className="text-xs text-gray-500">{notice}</p>}
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-4 bg-[#111] text-white rounded-xl text-sm font-semibold hover:bg-[#333] disabled:opacity-50 transition-colors cursor-pointer mt-2"
+          >
+            {loading ? "Posting..." : "Post Commission"}
           </button>
         </div>
 
@@ -104,7 +173,7 @@ export default function BusinessCommission() {
               <p className="text-base font-semibold text-gray-900">Active Orders</p>
               <p className="text-xs text-gray-400 mt-0.5">Track the status of all your commissioned articles</p>
             </div>
-            <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg">{ACTIVE_ORDERS.length} Orders</span>
+            <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg">{orders.length} Orders</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[600px]">
@@ -116,7 +185,7 @@ export default function BusinessCommission() {
                 </tr>
               </thead>
               <tbody>
-                {ACTIVE_ORDERS.map((o, i) => (
+                {orders.map((o, i) => (
                   <tr key={i} className="border-b border-gray-50 last:border-0">
                     <td className="py-3 text-sm text-gray-800 font-medium max-w-[220px]">{o.topic}</td>
                     <td className="py-3 text-sm text-gray-500">{o.writer}</td>

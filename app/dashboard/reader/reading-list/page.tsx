@@ -1,32 +1,38 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search, Trash2, ArrowRight } from "lucide-react";
+import { listSavedArticles, removeReadingListItem, type SavedArticleRow } from "@/lib/supabase/reading";
 
-interface SavedArticle {
-  id: string;
-  title: string;
-  author: string;
-  tag: string;
-  progress: number;
-  totalMins: number;
-  savedDate: string;
-}
-
-const INITIAL: SavedArticle[] = [
-  { id:"1", title:"The Silent Revolution in Neural Computing", author:"Arthur Black",  tag:"Technology", progress:90, totalMins:8,  savedDate:"Apr 17" },
-  { id:"2", title:"How Minimalism Took Over the Design World", author:"Shaivya Saini", tag:"Design",     progress:70, totalMins:5,  savedDate:"Apr 15" },
-  { id:"3", title:"The Hidden Economics of Attention",         author:"Jerome Bell",   tag:"Finance",    progress:55, totalMins:12, savedDate:"Apr 13" },
-  { id:"4", title:"Why Slow Reading Is Making a Comeback",     author:"Priya Mehta",   tag:"Culture",    progress:20, totalMins:6,  savedDate:"Apr 10" },
-  { id:"5", title:"Building Products People Actually Love",    author:"Arthur Black",  tag:"Business",   progress:0,  totalMins:9,  savedDate:"Apr 8"  },
+const INITIAL: SavedArticleRow[] = [
+  { itemId:"1", articleId:"1", slug:"1", title:"The Silent Revolution in Neural Computing", author:"Arthur Black",  tag:"Technology", progress:90, totalMins:8,  savedDate:"Apr 17" },
+  { itemId:"2", articleId:"2", slug:"2", title:"How Minimalism Took Over the Design World", author:"Shaivya Saini", tag:"Design",     progress:70, totalMins:5,  savedDate:"Apr 15" },
+  { itemId:"3", articleId:"3", slug:"3", title:"The Hidden Economics of Attention",         author:"Jerome Bell",   tag:"Finance",    progress:55, totalMins:12, savedDate:"Apr 13" },
+  { itemId:"4", articleId:"4", slug:"4", title:"Why Slow Reading Is Making a Comeback",     author:"Priya Mehta",   tag:"Culture",    progress:20, totalMins:6,  savedDate:"Apr 10" },
+  { itemId:"5", articleId:"5", slug:"5", title:"Building Products People Actually Love",    author:"Arthur Black",  tag:"Business",   progress:0,  totalMins:9,  savedDate:"Apr 8"  },
 ];
 
 export default function ReadingListPage() {
-  const [articles, setArticles] = useState<SavedArticle[]>(INITIAL);
+  const [articles, setArticles] = useState<SavedArticleRow[]>(INITIAL);
   const [search, setSearch]     = useState("");
 
-  const remove = (id: string) => setArticles(p => p.filter(a => a.id !== id));
+  useEffect(() => {
+    let alive = true;
+    listSavedArticles()
+      .then(rows => {
+        if (alive && rows.length) setArticles(rows);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const remove = (itemId: string) => {
+    setArticles(p => p.filter(a => a.itemId !== itemId));
+    void removeReadingListItem(itemId).catch(() => {});
+  };
 
   const filtered = articles.filter(a =>
     !search.trim() ||
@@ -69,7 +75,7 @@ export default function ReadingListPage() {
         {/* Article list */}
         <div className="flex flex-col gap-3">
           {filtered.map(a => (
-            <div key={a.id} className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div key={a.itemId} className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full">{a.tag}</span>
@@ -96,13 +102,13 @@ export default function ReadingListPage() {
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Link href={`/articles/${a.id}`}>
+                <Link href={`/articles/${a.slug}`}>
                   <button className="flex items-center gap-1.5 text-sm font-semibold bg-[#111] text-white px-4 py-2.5 rounded-xl hover:bg-[#333] transition-colors cursor-pointer whitespace-nowrap">
                     {a.progress === 0 ? "Start" : a.progress === 100 ? "Re-read" : "Continue"}
                     <ArrowRight size={14}/>
                   </button>
                 </Link>
-                <button onClick={() => remove(a.id)}
+                <button onClick={() => remove(a.itemId)}
                   className="p-2.5 text-gray-400 hover:text-red-400 hover:bg-red-50 rounded-xl transition-colors cursor-pointer">
                   <Trash2 size={16}/>
                 </button>

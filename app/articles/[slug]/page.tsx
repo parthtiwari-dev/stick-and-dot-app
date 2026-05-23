@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Star, LayoutDashboard, Compass, FilePlus, Settings, FolderOpen, BookOpen, ClipboardList, Users, Upload, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { rawToDash } from "@/lib/roles";
+import { addArticleComment, formatArticleDate, getArticle, listArticleComments, submitReview, type ArticleComment, type ArticleWithAuthor } from "@/lib/supabase/articles";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 
 function Stars({ n, size = 12 }: { n: number; size?: number }) {
@@ -16,8 +17,17 @@ function Stars({ n, size = 12 }: { n: number; size?: number }) {
   );
 }
 
-const COMMENTS = Array(8).fill(null).map((_,i)=>({
-  name:"Shaivya S.", date:"10/2/2023", quality: i%2===0?5:4, comment:"Lorem ipsum dolor Lorem ipsum dolor",
+const FALLBACK_COMMENTS = Array(4).fill(null).map((_,i)=>({
+  id: String(i),
+  article_id: "",
+  user_id: "",
+  author_name:"Shaivya S.",
+  created_at:"2023-10-02",
+  quality_rating: i%2===0?5:4,
+  body:"Lorem ipsum dolor Lorem ipsum dolor",
+  attachment_path: null,
+  reward_amount: null,
+  reward_currency: null,
 }));
 
 const WRITER_TOOLS = [
@@ -68,26 +78,72 @@ const NAV_BY_ROLE: Record<string, { label:string; href:string; icon:React.Compon
   ],
 };
 
+const FALLBACK_ARTICLE: ArticleWithAuthor = {
+  id: "fallback",
+  author_id: "",
+  commission_id: null,
+  domain_name: "Technology",
+  title: "The World's Most Dangerous Technology Ever Made.",
+  slug: "fallback",
+  excerpt: null,
+  body: "Commodo labore ut nisi laborum amet eu qui magna ullamco ut labore. Aliquip consectetur labore consectetur dolor exercitation est minim quis.\n\nNisi commodo qui pariatur enim sint laborum consequat enim in officia. Officia fugiat incididunt commodo et mollit aliqua non aute.\n\nEst Lorem consectetur minim sit eu eiusmod mollit velit. Consectetur voluptate ex amet id eiusmod laborum irure.",
+  tags: ["#technology", "#tech", "#career"],
+  status: "published",
+  word_count: 600,
+  read_time_minutes: 10,
+  submitted_at: null,
+  published_at: "2019-05-07",
+  created_at: "2019-05-07",
+  updated_at: "2019-05-07",
+  author_name: "Ralph Hawkins",
+  author_domain: "Technology",
+};
+
 function ArticlePageInner() {
   const [comment, setComment] = useState("");
   const [role, setRole] = useState("reader");
+  const [userId, setUserId] = useState("");
+  const [article, setArticle] = useState<ArticleWithAuthor>(FALLBACK_ARTICLE);
+  const [comments, setComments] = useState<ArticleComment[]>(FALLBACK_COMMENTS);
   const [activeTool, setActiveTool] = useState<string|null>(null);
   const [activeDim, setActiveDim] = useState<string|null>(null);
   const [dimRatings, setDimRatings] = useState<Record<string,number>>({});
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [notice, setNotice] = useState("");
 
+  const params = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
-  const isOwnArticle = searchParams.get("own") === "1";
+  const isOwnArticleParam = searchParams.get("own") === "1";
 
   useEffect(()=>{
+    let alive = true;
     getCurrentProfile()
-      .then(({ profile }) => setRole(rawToDash(profile?.role ?? "Reader")))
+      .then(({ user, profile }) => {
+        if (!alive) return;
+        setUserId(user?.id ?? "");
+        setRole(rawToDash(profile?.role ?? "Reader"));
+      })
       .catch(() => setRole("reader"));
-  }, []);
+
+    getArticle(params.slug)
+      .then(row => {
+        if (!alive || !row) return;
+        setArticle(row);
+        return listArticleComments(row.id);
+      })
+      .then(rows => {
+        if (alive && rows?.length) setComments(rows);
+      })
+      .catch(() => {});
+
+    return () => {
+      alive = false;
+    };
+  }, [params.slug]);
 
   const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.reader;
-  const isWriterOwner = role === "writer" && isOwnArticle;
-  const isSME = role === "subject-expert";
+  const isWriterOwner = role === "writer" && (isOwnArticleParam || article.author_id === userId);
+  const isSME = role === "subject-expert" && article.status !== "draft";
   const showPanel = isWriterOwner || isSME;
 
   const rateDim = (label: string, score: number) => {
@@ -97,11 +153,36 @@ function ArticlePageInner() {
 
   const allRated = QUALITY_DIMS.every(d => dimRatings[d.label]);
 
+  const handleReviewSubmit = async () => {
+    if (!allRated) return;
+    setNotice("");
+    try {
+      await submitReview({ articleId: article.id, ratings: dimRatings, decision: "approved" });
+      setReviewSubmitted(true);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Unable to submit review.");
+    }
+  };
+
+  const handleCommentSubmit = async () => {
+    const body = comment.trim();
+    if (!body || article.id === "fallback") return;
+    setNotice("");
+    try {
+      await addArticleComment({ articleId: article.id, body, qualityRating: 5 });
+      const rows = await listArticleComments(article.id);
+      setComments(rows.length ? rows : comments);
+      setComment("");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Unable to add comment.");
+    }
+  };
+
+  const bodyParagraphs = article.body.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+
   return (
     <div className="flex min-h-screen bg-white flex-col">
       <div className="flex flex-1">
-
-        {/* Slim dark sidebar */}
         <aside className="hidden md:flex fixed top-0 left-0 h-screen w-[60px] bg-[#0A0A0A] flex-col items-center z-20 rounded-r-2xl py-5 gap-1">
           {navItems.map(({ label, href, icon: Icon }) => (
             <Link key={href} href={href} title={label}
@@ -113,33 +194,28 @@ function ArticlePageInner() {
 
         <main className="md:ml-[60px] flex-1 w-full">
           <div className="max-w-4xl mx-auto px-6 md:px-12 py-10">
-
-            {/* Title & meta */}
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-3 leading-tight">
-              The World&apos;s Most Dangerous Technology Ever Made.
+              {article.title}
             </h1>
             <div className="text-center mb-1">
               <p className="text-xs text-gray-400">
-                Ralph Hawkins · May 7, 2019 ·{" "}
+                {article.author_name} · {formatArticleDate(article.published_at ?? article.created_at)} ·{" "}
                 <span className="inline-flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-green-400 inline-block"/>
-                  10 mins read
+                  {article.read_time_minutes} mins read
                 </span>
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">#technology #tech #career</p>
+              <p className="text-xs text-gray-400 mt-0.5">{article.tags.join(" ")}</p>
             </div>
 
-            {/* Role-conditional panel — only for writer-owner and SME */}
             {showPanel && (
               <div className="bg-[#1A1A1A] rounded-2xl p-5 mb-6 mt-6">
                 <div className="flex flex-col sm:flex-row gap-6">
-
-                  {/* WRITER-OWNER: keywords + writing tools (left) + engagement (right) */}
                   {isWriterOwner && (
                     <>
                       <div className="flex-1">
                         <p className="text-white text-sm font-semibold mb-1">Suggested Keywords</p>
-                        <p className="text-gray-400 text-xs mb-3">#technology #tech #Career</p>
+                        <p className="text-gray-400 text-xs mb-3">{article.tags.join(" ")}</p>
                         <p className="text-gray-500 text-[10px] uppercase tracking-widest mb-2 font-semibold">Writing Tools</p>
                         <div className="flex flex-wrap gap-2">
                           {WRITER_TOOLS.map(tool => (
@@ -163,16 +239,12 @@ function ArticlePageInner() {
                       </div>
                       <div className="flex-shrink-0 min-w-[130px] sm:text-right">
                         <p className="text-white text-xs font-semibold mb-1">Engagement</p>
-                        <p className="text-white text-4xl font-bold">2.4K</p>
-                        <p className="text-gray-400 text-xs mt-1">263 contributions in the last year</p>
-                        <svg width="120" height="28" viewBox="0 0 120 28" className="mt-1 sm:ml-auto">
-                          <polyline points="0,22 20,18 40,20 60,8 80,12 100,5 120,3" stroke="#4ade80" strokeWidth="1.5" fill="none"/>
-                        </svg>
+                        <p className="text-white text-4xl font-bold">{comments.length}</p>
+                        <p className="text-gray-400 text-xs mt-1">reader comments</p>
                       </div>
                     </>
                   )}
 
-                  {/* SME: interactive quality assessment — no engagement column */}
                   {isSME && (
                     <div className="flex-1">
                       {reviewSubmitted ? (
@@ -213,7 +285,7 @@ function ArticlePageInner() {
                           </div>
                           <button
                             disabled={!allRated}
-                            onClick={()=>allRated&&setReviewSubmitted(true)}
+                            onClick={handleReviewSubmit}
                             className={`text-xs font-semibold px-5 py-2.5 rounded-xl transition-all ${
                               allRated
                                 ?"bg-white text-black hover:bg-gray-100 cursor-pointer"
@@ -229,49 +301,43 @@ function ArticlePageInner() {
               </div>
             )}
 
-            {/* Hero image — always shown on article view */}
+            {notice && <p className="text-xs text-center text-red-500 mb-4">{notice}</p>}
+
             <div className={`w-full h-56 md:h-72 bg-gradient-to-br from-gray-700 to-gray-500 rounded-2xl mb-8 overflow-hidden flex items-center justify-center ${showPanel ? "" : "mt-6"}`}>
               <span className="text-white/30 text-lg font-medium">Article Hero Image</span>
             </div>
 
-            {/* Body */}
             <div className="text-sm text-gray-700 leading-loose space-y-5">
-              <p>Commodo labore ut nisi laborum amet eu qui magna ullamco ut labore. Aliquip consectetur labore consectetur dolor exercitation est minim quis. Magna non irure qui ex est laborum nulla excepteur qui. Anim Lorem dolore cupidatat pariatur ex tempor. Duis ea excepteur proident ex commodo irure est.</p>
-              <p>Nisi commodo qui pariatur enim sint laborum consequat enim in officia. Officia fugiat incididunt commodo et mollit aliqua non aute. Enim dolor eiusmod aliqua amet ipsum in enim eiusmod. Quis exercitation sit velit duis.</p>
-              <p>Est Lorem consectetur minim sit eu eiusmod mollit velit. Consectetur voluptate ex amet id eiusmod laborum irure. Aliquip ad qui id exercitation irure amet commodo nisi quis. Occaecat minim incididunt eiusmod nostrud veniam quis culpa.</p>
-              <p>Aliquip mollit sunt qui irure. Irure ullamco Lorem excepteur dolor qui ea ad quis. Enim fugiat cillum enim ad occaecat sint qui elit labore mollit sunt laborum fugiat consequat. Voluptate labore sunt duis eu deserunt.</p>
+              {bodyParagraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
             </div>
 
-            {/* About Author */}
             <div className="mt-10 pt-6 border-t border-gray-100">
               <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">About the Author</p>
               <div className="flex gap-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex-shrink-0"/>
                 <div>
-                  <p className="font-bold text-gray-900 mb-0.5">Arthur Black</p>
-                  <p className="text-gray-400 text-xs mb-2">@arthurblack</p>
-                  <p className="text-sm text-gray-600 leading-relaxed">Ipsum adipiscing culpa est nisi consequat ex amet magna culpa mollit laborum fugiat veniam tempor irure ea. Reprehenderit labore do tempor eiusmod in consectetur ex sunt id mollit commodo ipsum deserunt quis.</p>
+                  <p className="font-bold text-gray-900 mb-0.5">{article.author_name}</p>
+                  <p className="text-gray-400 text-xs mb-2">{article.author_domain}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{article.excerpt ?? "Writer on Stick&Dot."}</p>
                 </div>
               </div>
             </div>
 
-            {/* Comments — visible to all roles */}
             <div className="mt-10 pt-6 border-t border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-5">Comments</h2>
               <div className="mb-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Add a Comment</h3>
                 <div className="border-b border-gray-200 pb-2 mb-4 flex items-center justify-between">
-                  <input type="text" value={comment} onChange={e=>setComment(e.target.value)}
+                  <input type="text" value={comment}
+                    onChange={e=>setComment(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") void handleCommentSubmit(); }}
                     placeholder="Type your Comment"
                     className="flex-1 text-sm text-gray-700 outline-none placeholder:text-gray-300"/>
                   <button className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <Upload size={12}/> Upload
                   </button>
-                </div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex-shrink-0"/>
-                  <div className="flex-1 text-sm text-gray-500 italic">Shaivya S. · Lorem ipsum dolor sit amet…</div>
-                  <button className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">+$XXX</button>
                 </div>
               </div>
               <table className="w-full">
@@ -283,23 +349,22 @@ function ArticlePageInner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {COMMENTS.map((c,i)=>(
-                    <tr key={i} className="border-b border-gray-50 last:border-0">
+                  {comments.map(c=>(
+                    <tr key={c.id} className="border-b border-gray-50 last:border-0">
                       <td className="py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex-shrink-0"/>
-                          <span className="text-sm text-gray-700">{c.name}</span>
+                          <span className="text-sm text-gray-700">{c.author_name}</span>
                         </div>
                       </td>
-                      <td className="py-3 text-sm text-gray-500">{c.date}</td>
-                      <td className="py-3"><Stars n={c.quality}/></td>
-                      <td className="py-3 text-sm text-gray-400">{c.comment}</td>
+                      <td className="py-3 text-sm text-gray-500">{formatArticleDate(c.created_at)}</td>
+                      <td className="py-3"><Stars n={c.quality_rating ?? 5}/></td>
+                      <td className="py-3 text-sm text-gray-400">{c.body}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-
           </div>
         </main>
       </div>

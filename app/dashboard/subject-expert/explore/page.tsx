@@ -1,20 +1,29 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search, ChevronRight } from "lucide-react";
 import { dashRootPath } from "@/lib/roles";
+import { formatArticleDate, listReviewQueueArticles } from "@/lib/supabase/articles";
+import { getCurrentProfile } from "@/lib/supabase/profile";
 
-// SME only sees articles in their certified domain (Technology here)
-// When backend is wired, replace this constant with the user's actual certified domain
-const SME_DOMAIN = "Technology";
+type ReviewArticle = {
+  id: string;
+  slug: string;
+  title: string;
+  domain: string;
+  writer: string;
+  submitted: string;
+  status: "pending" | "published";
+  urgency: string;
+};
 
-const ARTICLES = [
-  { id:"ART-0041", title:"The Future of EVs in India",               domain:"Technology", writer:"Ravi M.",   submitted:"Apr 10", status:"pending",   urgency:"high"   },
-  { id:"ART-0045", title:"Quantum Computing Explained Simply",        domain:"Technology", writer:"Aman G.",   submitted:"Apr 7",  status:"pending",   urgency:"medium" },
-  { id:"ART-0038", title:"The Silent Revolution in Neural Computing", domain:"Technology", writer:"Aisha R.",  submitted:"Apr 5",  status:"published", urgency:"low"    },
-  { id:"ART-0036", title:"AI in Everyday Life",                       domain:"Technology", writer:"Dev P.",    submitted:"Apr 2",  status:"published", urgency:"low"    },
-  { id:"ART-0050", title:"5G and Its Real-World Impact",              domain:"Technology", writer:"Meera S.",  submitted:"Mar 30", status:"pending",   urgency:"high"   },
+const FALLBACK_ARTICLES: ReviewArticle[] = [
+  { id:"ART-0041", slug:"ART-0041", title:"The Future of EVs in India",               domain:"Technology", writer:"Ravi M.",   submitted:"Apr 10", status:"pending",   urgency:"high"   },
+  { id:"ART-0045", slug:"ART-0045", title:"Quantum Computing Explained Simply",        domain:"Technology", writer:"Aman G.",   submitted:"Apr 7",  status:"pending",   urgency:"medium" },
+  { id:"ART-0038", slug:"ART-0038", title:"The Silent Revolution in Neural Computing", domain:"Technology", writer:"Aisha R.",  submitted:"Apr 5",  status:"published", urgency:"low"    },
+  { id:"ART-0036", slug:"ART-0036", title:"AI in Everyday Life",                       domain:"Technology", writer:"Dev P.",    submitted:"Apr 2",  status:"published", urgency:"low"    },
+  { id:"ART-0050", slug:"ART-0050", title:"5G and Its Real-World Impact",              domain:"Technology", writer:"Meera S.",  submitted:"Mar 30", status:"pending",   urgency:"high"   },
 ];
 
 const urgencyPill = (u: string) =>
@@ -33,9 +42,42 @@ export default function SMEExplorePage() {
   const [search, setSearch]             = useState("");
   const [activeStatus, setActiveStatus] = useState<"all" | "pending" | "published">("all");
   const [visibleCount, setVisibleCount] = useState(CARDS_PER_LOAD);
+  const [articles, setArticles] = useState<ReviewArticle[]>(FALLBACK_ARTICLES);
+  const [domainLabel, setDomainLabel] = useState("Technology");
 
-  const filtered = ARTICLES
-    .filter(a => a.domain === SME_DOMAIN)
+  useEffect(() => {
+    let alive = true;
+
+    getCurrentProfile()
+      .then(({ profile }) => {
+        if (!alive) return;
+        const domains = profile?.expertise_domains?.length ? profile.expertise_domains : [profile?.domain ?? "Technology"];
+        setDomainLabel(domains.filter(Boolean).join(", "));
+      })
+      .catch(() => {});
+
+    listReviewQueueArticles()
+      .then(rows => {
+        if (!alive || rows.length === 0) return;
+        setArticles(rows.map(row => ({
+          id: row.id.slice(0, 8).toUpperCase(),
+          slug: row.slug,
+          title: row.title,
+          domain: row.domain_name,
+          writer: row.author_name,
+          submitted: formatArticleDate(row.submitted_at ?? row.updated_at),
+          status: row.status === "published" ? "published" : "pending",
+          urgency: row.status === "submitted" ? "high" : row.status === "revision_requested" ? "medium" : "low",
+        })));
+      })
+      .catch(() => {});
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtered = articles
     .filter(a => activeStatus === "all" || a.status === activeStatus)
     .filter(a => !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.writer.toLowerCase().includes(search.toLowerCase()));
 
@@ -70,7 +112,7 @@ export default function SMEExplorePage() {
             <h1 className="text-2xl md:text-3xl font-bold text-[#0a0a0a]">Review Queue</h1>
             <p className="text-sm text-[#6b7280] mt-1">
               Showing articles in your domain:{" "}
-              <span className="font-semibold text-[#0a0a0a]">{SME_DOMAIN}</span>
+              <span className="font-semibold text-[#0a0a0a]">{domainLabel}</span>
             </p>
           </div>
           <div className="flex items-center gap-2 bg-white border border-[#e5e7eb] rounded-lg px-4 py-2.5 w-full sm:w-64">
@@ -153,14 +195,14 @@ export default function SMEExplorePage() {
                       </span>
                       {a.status === "pending" ? (
                         <Link
-                          href={`/articles/${a.id}`}
+                          href={`/articles/${a.slug}`}
                           className="text-[10px] font-semibold bg-[#0a0a0a] text-white px-2.5 py-1 rounded-full hover:bg-[#374151] transition-colors"
                         >
                           Review
                         </Link>
                       ) : (
                         <Link
-                          href={`/articles/${a.id}`}
+                          href={`/articles/${a.slug}`}
                           className="text-[10px] text-[#6b7280] hover:text-[#0a0a0a] transition-colors"
                         >
                           View →

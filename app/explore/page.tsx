@@ -1,31 +1,54 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import LightCard from "@/components/ui/LightCard";
 import { Search } from "lucide-react";
+import { formatReadTime, listPublishedArticles } from "@/lib/supabase/articles";
 
 const TAGS = ["All", "#Technology", "#Finance", "#Medical", "#Science", "#Design", "#Career", "#AI"];
-
-const ARTICLES = [
-  { id:"1", title:"The Silent Revolution in Neural Computing",       author:"Aisha R.",  tags:["#technology","#AI"],       readTime:"8 min"  },
-  { id:"2", title:"How Minimalism Took Over the Design World",       author:"Ravi M.",   tags:["#design","#culture"],      readTime:"6 min"  },
-  { id:"3", title:"The Hidden Economics of Attention",               author:"Priya K.",  tags:["#finance","#psychology"],  readTime:"10 min" },
-  { id:"4", title:"Why Great Ideas Die in Meetings",                 author:"Sara T.",   tags:["#career","#productivity"], readTime:"5 min"  },
-  { id:"5", title:"Building Systems That Last",                      author:"Aman G.",   tags:["#technology","#career"],   readTime:"7 min"  },
-  { id:"6", title:"The Attention Economy and What It Costs Us",      author:"Neha S.",   tags:["#AI","#society"],          readTime:"9 min"  },
-  { id:"7", title:"Decoding the Human Genome: 2025 Edition",         author:"Dev P.",    tags:["#medical","#science"],     readTime:"12 min" },
-  { id:"8", title:"Climate Finance: Who's Really Paying",            author:"Meera S.",  tags:["#finance","#science"],     readTime:"8 min"  },
-  { id:"9", title:"The Quiet Death of the Open Office",              author:"Arjun D.",  tags:["#career","#design"],       readTime:"6 min"  },
-];
-
 const CARDS_PER_PAGE = 6;
+
+type ExploreArticle = { id: string; slug: string; title: string; author: string; tags: string[]; readTime: string };
+
+const FALLBACK_ARTICLES: ExploreArticle[] = [
+  { id:"1", slug:"1", title:"The Silent Revolution in Neural Computing",       author:"Aisha R.",  tags:["#technology","#AI"],       readTime:"8 min"  },
+  { id:"2", slug:"2", title:"How Minimalism Took Over the Design World",       author:"Ravi M.",   tags:["#design","#culture"],      readTime:"6 min"  },
+  { id:"3", slug:"3", title:"The Hidden Economics of Attention",               author:"Priya K.",  tags:["#finance","#psychology"],  readTime:"10 min" },
+  { id:"4", slug:"4", title:"Why Great Ideas Die in Meetings",                 author:"Sara T.",   tags:["#career","#productivity"], readTime:"5 min"  },
+  { id:"5", slug:"5", title:"Building Systems That Last",                      author:"Aman G.",   tags:["#technology","#career"],   readTime:"7 min"  },
+  { id:"6", slug:"6", title:"The Attention Economy and What It Costs Us",      author:"Neha S.",   tags:["#AI","#society"],          readTime:"9 min"  },
+  { id:"7", slug:"7", title:"Decoding the Human Genome: 2025 Edition",         author:"Dev P.",    tags:["#medical","#science"],     readTime:"12 min" },
+  { id:"8", slug:"8", title:"Climate Finance: Who's Really Paying",            author:"Meera S.",  tags:["#finance","#science"],     readTime:"8 min"  },
+  { id:"9", slug:"9", title:"The Quiet Death of the Open Office",              author:"Arjun D.",  tags:["#career","#design"],       readTime:"6 min"  },
+];
 
 export default function ExplorePage() {
   const [search, setSearch]       = useState("");
   const [activeTag, setActiveTag] = useState("All");
   const [page, setPage]           = useState(0);
+  const [articles, setArticles] = useState<ExploreArticle[]>(FALLBACK_ARTICLES);
 
-  const filtered = ARTICLES
+  useEffect(() => {
+    let alive = true;
+    listPublishedArticles()
+      .then(rows => {
+        if (!alive || rows.length === 0) return;
+        setArticles(rows.map(row => ({
+          id: row.id,
+          slug: row.slug,
+          title: row.title,
+          author: row.author_name,
+          tags: row.tags.length ? row.tags : [`#${row.domain_name}`],
+          readTime: formatReadTime(row.read_time_minutes),
+        })));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtered = articles
     .filter(a => activeTag === "All" || a.tags.some(t => t.toLowerCase() === activeTag.toLowerCase()))
     .filter(a => !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.author.toLowerCase().includes(search.toLowerCase()));
 
@@ -36,8 +59,6 @@ export default function ExplorePage() {
     <AppLayout bg="bg-white">
       <div className="min-h-screen">
         <div className="max-w-6xl mx-auto px-6 md:px-12 py-10">
-
-          {/* Hero search */}
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-bold text-[#0a0a0a] mb-2">Explore Articles</h1>
             <p className="text-[#6b7280] text-sm mb-6">Discover expert-reviewed content across every domain</p>
@@ -53,7 +74,6 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          {/* Tag pills — horizontal scroll, no scrollbar */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-8">
             {TAGS.map(tag => (
               <button
@@ -71,7 +91,6 @@ export default function ExplorePage() {
             ))}
           </div>
 
-          {/* Cards grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {visible.map(a => (
               <LightCard
@@ -81,7 +100,7 @@ export default function ExplorePage() {
                 author={a.author}
                 tags={a.tags}
                 readTime={a.readTime}
-                href={`/articles/${a.id}`}
+                href={`/articles/${a.slug}`}
               />
             ))}
             {visible.length === 0 && (
@@ -91,7 +110,6 @@ export default function ExplorePage() {
             )}
           </div>
 
-          {/* Pagination — Previous / Page X of Y / Next */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <button
@@ -113,7 +131,6 @@ export default function ExplorePage() {
               </button>
             </div>
           )}
-
         </div>
       </div>
     </AppLayout>

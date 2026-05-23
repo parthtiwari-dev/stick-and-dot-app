@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import { cacheSession, normalizeRawRole, type RawRole } from "@/lib/roles";
 import { createClient } from "./client";
+import { normalizeDomain } from "./domains";
 
 export const PROFILE_FILES_BUCKET = "profile-files";
 
@@ -15,6 +16,8 @@ export interface ProfileRecord {
   dob: string | null;
   expertise_domains: string[] | null;
   credential_file_path: string | null;
+  avatar_url: string | null;
+  bio: string | null;
 }
 
 export interface ProfileInput {
@@ -27,6 +30,8 @@ export interface ProfileInput {
   dob?: string | null;
   expertise_domains?: string[];
   credential_file_path?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
 }
 
 function clean(value: string | null | undefined) {
@@ -45,6 +50,39 @@ function applyProfileCache(profile: ProfileRecord | null, user?: User | null) {
     name: profile?.name ?? user?.user_metadata?.name ?? user?.email ?? "",
     email: profile?.email ?? user?.email ?? "",
   });
+}
+
+function uniqueDomains(input: Array<string | null | undefined>) {
+  return [...new Set(input.map(normalizeDomain).filter(Boolean))];
+}
+
+async function syncProfileDomains(profileId: string, domains: string[] | undefined) {
+  if (!domains) return;
+
+  const supabase = createClient();
+  const normalized = uniqueDomains(domains);
+
+  const { error: deleteError } = await supabase
+    .from("profile_domains")
+    .delete()
+    .eq("profile_id", profileId);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  if (normalized.length === 0) return;
+
+  const { error } = await supabase.from("profile_domains").insert(
+    normalized.map(domain => ({
+      profile_id: profileId,
+      domain_name: domain,
+    }))
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export async function getCurrentProfile() {
@@ -87,8 +125,10 @@ export async function upsertCurrentProfile(input: ProfileInput) {
     domain: clean(input.domain),
     gender: clean(input.gender),
     dob: clean(input.dob),
-    expertise_domains: input.expertise_domains ?? undefined,
+    expertise_domains: input.expertise_domains ? uniqueDomains(input.expertise_domains) : undefined,
     credential_file_path: clean(input.credential_file_path),
+    avatar_url: clean(input.avatar_url),
+    bio: clean(input.bio),
     updated_at: new Date().toISOString(),
   };
 
@@ -102,6 +142,7 @@ export async function upsertCurrentProfile(input: ProfileInput) {
     throw new Error(error.message);
   }
 
+  await syncProfileDomains(data.id, payload.expertise_domains);
   applyProfileCache(data, userData.user);
   return data;
 }
@@ -118,6 +159,8 @@ export async function updateCurrentProfile(input: ProfileInput) {
     dob: profile?.dob ?? input.dob,
     expertise_domains: input.expertise_domains ?? profile?.expertise_domains ?? undefined,
     credential_file_path: input.credential_file_path ?? profile?.credential_file_path ?? null,
+    avatar_url: input.avatar_url ?? profile?.avatar_url ?? null,
+    bio: input.bio ?? profile?.bio ?? null,
   });
 }
 
@@ -141,4 +184,3 @@ export async function uploadProfileFile(file: File) {
 
   return path;
 }
-
