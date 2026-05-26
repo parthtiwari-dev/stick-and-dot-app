@@ -57,7 +57,11 @@ const DEV_ACCOUNTS: DevAccountConfig[] = [
 ];
 
 export function isDevAuthEnabled() {
-  return isEnvEnabled(process.env.DEV_AUTH_ENABLED) && process.env.VERCEL_ENV !== "production";
+  const localOrPreviewDevAuth =
+    isEnvEnabled(process.env.DEV_AUTH_ENABLED) && process.env.VERCEL_ENV !== "production";
+  const explicitProductionDemoAuth = isEnvEnabled(process.env.DEMO_AUTH_ENABLED);
+
+  return localOrPreviewDevAuth || explicitProductionDemoAuth;
 }
 
 export function getDevAccount(key: string) {
