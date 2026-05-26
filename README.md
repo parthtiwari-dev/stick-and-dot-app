@@ -36,10 +36,6 @@ SUPABASE_SERVICE_ROLE_KEY=
 DEV_AUTH_ENABLED=true
 NEXT_PUBLIC_DEV_AUTH_ENABLED=true
 
-# Optional alias for temporary founder/demo quick login.
-DEMO_AUTH_ENABLED=false
-NEXT_PUBLIC_DEMO_AUTH_ENABLED=false
-
 # before_publish | commissions_only | optional
 SME_REVIEW_MODE=before_publish
 NEXT_PUBLIC_SME_REVIEW_MODE=before_publish
@@ -69,7 +65,7 @@ Important rules:
 - Never put a secret/service-role key in a `NEXT_PUBLIC_` variable.
 - The app itself uses the publishable key plus user sessions/RLS.
 - The elevated key is only for `npm run seed:dev`.
-- `DEV_AUTH_ENABLED`/`NEXT_PUBLIC_DEV_AUTH_ENABLED` show seeded quick-login buttons. `DEMO_AUTH_ENABLED`/`NEXT_PUBLIC_DEMO_AUTH_ENABLED` are optional aliases for the same founder-demo purpose.
+- `DEV_AUTH_ENABLED`/`NEXT_PUBLIC_DEV_AUTH_ENABLED` show seeded quick-login buttons.
 - Do not paste real keys into chat, screenshots, commits, or frontend code.
 
 Run the dev server:
@@ -318,7 +314,6 @@ Do these before shipping:
 - Configure Vercel env vars.
 - Do not add `SUPABASE_SERVICE_ROLE_KEY` as a public env var.
 - Keep `DEV_AUTH_ENABLED=false` and `NEXT_PUBLIC_DEV_AUTH_ENABLED=false` in production except during a controlled founder/demo session.
-- Keep `DEMO_AUTH_ENABLED=false` and `NEXT_PUBLIC_DEMO_AUTH_ENABLED=false` unless using the optional demo alias.
 - Configure custom SMTP before real email volume.
 - Configure OAuth providers only after provider callback URLs are ready.
 - Do one full role-by-role seeded test before committing or shipping.

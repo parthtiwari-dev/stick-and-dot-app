@@ -23,10 +23,7 @@ function Inner() {
   const [devAccounts, setDevAccounts] = useState<DevAccount[]>([]);
 
   useEffect(() => {
-    const showDevAuth =
-      isEnvEnabled(process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED) ||
-      isEnvEnabled(process.env.NEXT_PUBLIC_DEMO_AUTH_ENABLED);
-    if (!showDevAuth) return;
+    if (!isEnvEnabled(process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED)) return;
 
     fetch("/api/dev-auth/accounts")
       .then(res => res.json())

@@ -57,7 +57,7 @@ const DEV_ACCOUNTS: DevAccountConfig[] = [
 ];
 
 export function isDevAuthEnabled() {
-  return isEnvEnabled(process.env.DEV_AUTH_ENABLED) || isEnvEnabled(process.env.DEMO_AUTH_ENABLED);
+  return isEnvEnabled(process.env.DEV_AUTH_ENABLED);
 }
 
 export function getDevAccount(key: string) {
