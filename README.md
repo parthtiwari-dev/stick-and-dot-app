@@ -32,12 +32,11 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 # Server-only. Do not expose this in browser code or Vercel public env vars.
 SUPABASE_SERVICE_ROLE_KEY=
 
-# Local/dev only. Keep false in production.
+# Quick-login role switcher. Keep false in production except during a controlled demo.
 DEV_AUTH_ENABLED=true
 NEXT_PUBLIC_DEV_AUTH_ENABLED=true
 
-# Temporary founder/demo quick login for Vercel Production.
-# Keep false unless you intentionally want seeded test buttons visible online.
+# Optional alias for temporary founder/demo quick login.
 DEMO_AUTH_ENABLED=false
 NEXT_PUBLIC_DEMO_AUTH_ENABLED=false
 
@@ -70,7 +69,7 @@ Important rules:
 - Never put a secret/service-role key in a `NEXT_PUBLIC_` variable.
 - The app itself uses the publishable key plus user sessions/RLS.
 - The elevated key is only for `npm run seed:dev`.
-- `DEMO_AUTH_ENABLED` and `NEXT_PUBLIC_DEMO_AUTH_ENABLED` are an explicit temporary production demo override for seeded quick-login buttons.
+- `DEV_AUTH_ENABLED`/`NEXT_PUBLIC_DEV_AUTH_ENABLED` show seeded quick-login buttons. `DEMO_AUTH_ENABLED`/`NEXT_PUBLIC_DEMO_AUTH_ENABLED` are optional aliases for the same founder-demo purpose.
 - Do not paste real keys into chat, screenshots, commits, or frontend code.
 
 Run the dev server:
@@ -192,7 +191,7 @@ The remaining static/demo pages are mostly marketing or secondary profile/settin
 
 ### 2a. Temporary Vercel Demo Login
 
-The normal dev quick-login flags do not show buttons on Vercel Production. That is intentional, so seeded test accounts are not exposed by accident.
+Seeded quick-login can be enabled on Vercel Production for a controlled founder demo. Do not leave it enabled after the demo.
 
 For a controlled founder demo on the production deployment:
 
@@ -200,8 +199,8 @@ For a controlled founder demo on the production deployment:
 - In Vercel Project Settings > Environment Variables, set these for the Production environment:
 
 ```bash
-DEMO_AUTH_ENABLED=true
-NEXT_PUBLIC_DEMO_AUTH_ENABLED=true
+DEV_AUTH_ENABLED=true
+NEXT_PUBLIC_DEV_AUTH_ENABLED=true
 DEV_TEST_PASSWORD=StickDotDev123!
 DEV_TEST_DEV_WRITER_EMAIL=dev-writer@stickanddot.test
 DEV_TEST_WRITER_EMAIL=writer@stickanddot.test
@@ -212,7 +211,7 @@ DEV_TEST_BUSINESS_EMAIL=business@stickanddot.test
 
 - Redeploy the production deployment after changing env vars. `NEXT_PUBLIC_` values are baked into the browser bundle at build time.
 - Open `/login` and confirm the quick-login buttons appear.
-- After the demo, set both demo flags back to `false` and redeploy.
+- After the demo, set both dev-auth flags back to `false` and redeploy.
 
 ### 3. Writer Flow
 
@@ -318,8 +317,8 @@ Do these before shipping:
 - Apply `supabase/schema.sql` to production Supabase before Vercel deploy.
 - Configure Vercel env vars.
 - Do not add `SUPABASE_SERVICE_ROLE_KEY` as a public env var.
-- Keep `DEV_AUTH_ENABLED=false` and `NEXT_PUBLIC_DEV_AUTH_ENABLED=false` in production.
-- Keep `DEMO_AUTH_ENABLED=false` and `NEXT_PUBLIC_DEMO_AUTH_ENABLED=false` except during a controlled founder/demo session.
+- Keep `DEV_AUTH_ENABLED=false` and `NEXT_PUBLIC_DEV_AUTH_ENABLED=false` in production except during a controlled founder/demo session.
+- Keep `DEMO_AUTH_ENABLED=false` and `NEXT_PUBLIC_DEMO_AUTH_ENABLED=false` unless using the optional demo alias.
 - Configure custom SMTP before real email volume.
 - Configure OAuth providers only after provider callback URLs are ready.
 - Do one full role-by-role seeded test before committing or shipping.
