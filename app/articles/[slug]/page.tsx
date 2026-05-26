@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
-import { Star, LayoutDashboard, Compass, FilePlus, Settings, FolderOpen, BookOpen, ClipboardList, Users, Send, CheckCircle } from "lucide-react";
+import { Star, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { rawToDash } from "@/lib/roles";
+import AppLayout from "@/components/AppLayout";
+import { rawToDash, type DashRole } from "@/lib/roles";
 import { addArticleComment, formatArticleDate, getArticle, listArticleComments, submitReview, type ArticleComment, type ArticleWithAuthor } from "@/lib/supabase/articles";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 
@@ -37,37 +38,9 @@ const QUALITY_DIMS = [
   { label:"Insight",   desc:"Does it add new perspectives?" },
 ];
 
-const NAV_BY_ROLE: Record<string, { label:string; href:string; icon:React.ComponentType<{size?:number;strokeWidth?:number}> }[]> = {
-  writer: [
-    { label:"Dashboard", href:"/dashboard/writer",           icon:LayoutDashboard },
-    { label:"Explore",   href:"/dashboard/writer/explore",   icon:Compass },
-    { label:"Create",    href:"/dashboard/writer/create",    icon:FilePlus },
-    { label:"Portfolio", href:"/dashboard/writer/portfolio", icon:FolderOpen },
-    { label:"Settings",  href:"/dashboard/writer/settings",  icon:Settings },
-  ],
-  reader: [
-    { label:"Dashboard",    href:"/dashboard/reader",              icon:LayoutDashboard },
-    { label:"Explore",      href:"/explore",                       icon:Compass },
-    { label:"Reading List", href:"/dashboard/reader/reading-list", icon:BookOpen },
-    { label:"Settings",     href:"/dashboard/reader/settings",     icon:Settings },
-  ],
-  "subject-expert": [
-    { label:"Dashboard", href:"/dashboard/subject-expert",           icon:LayoutDashboard },
-    { label:"Explore",   href:"/dashboard/subject-expert/explore",   icon:Compass },
-    { label:"Portfolio", href:"/dashboard/subject-expert/portfolio", icon:FolderOpen },
-    { label:"Settings",  href:"/dashboard/subject-expert/settings",  icon:Settings },
-  ],
-  business: [
-    { label:"Dashboard",  href:"/dashboard/business",            icon:LayoutDashboard },
-    { label:"Commission", href:"/dashboard/business/commission", icon:ClipboardList },
-    { label:"Writers",    href:"/dashboard/business/writers",    icon:Users },
-    { label:"Settings",   href:"/dashboard/business/settings",   icon:Settings },
-  ],
-};
-
 function ArticlePageInner() {
   const [comment, setComment] = useState("");
-  const [role, setRole] = useState("reader");
+  const [role, setRole] = useState<DashRole>("reader");
   const [userId, setUserId] = useState("");
   const [article, setArticle] = useState<ArticleWithAuthor | null>(null);
   const [comments, setComments] = useState<ArticleComment[]>([]);
@@ -123,23 +96,27 @@ function ArticlePageInner() {
     };
   }, [params.slug]);
 
-  const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.reader;
-
   if (loading) {
-    return <div className="min-h-screen bg-white" />;
+    return (
+      <AppLayout bg="bg-white" role={role}>
+        <div className="min-h-screen" />
+      </AppLayout>
+    );
   }
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Article not found</h1>
-          <p className="text-sm text-gray-500 mb-5">This article is unavailable or you do not have access to it.</p>
-          <Link href="/explore" className="text-sm font-semibold bg-[#111] text-white px-5 py-2.5 rounded-xl">
-            Explore Articles
-          </Link>
+      <AppLayout bg="bg-white" role={role}>
+        <div className="min-h-screen flex items-center justify-center px-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Article not found</h1>
+            <p className="text-sm text-gray-500 mb-5">This article is unavailable or you do not have access to it.</p>
+            <Link href="/explore" className="text-sm font-semibold bg-[#111] text-white px-5 py-2.5 rounded-xl">
+              Explore Articles
+            </Link>
+          </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
@@ -182,19 +159,9 @@ function ArticlePageInner() {
   const bodyParagraphs = article.body.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
 
   return (
-    <div className="flex min-h-screen bg-white flex-col">
-      <div className="flex flex-1">
-        <aside className="hidden md:flex fixed top-0 left-0 h-screen w-[60px] bg-[#0A0A0A] flex-col items-center z-20 rounded-r-2xl py-5 gap-1">
-          {navItems.map(({ label, href, icon: Icon }) => (
-            <Link key={href} href={href} title={label}
-              className="text-gray-500 hover:text-white transition-colors p-2.5 rounded-xl hover:bg-white/5 w-full flex justify-center">
-              <Icon size={17} strokeWidth={1.5}/>
-            </Link>
-          ))}
-        </aside>
-
-        <main className="md:ml-[60px] flex-1 w-full">
-          <div className="max-w-4xl mx-auto px-6 md:px-12 py-10">
+    <AppLayout bg="bg-white" role={role}>
+      <div className="min-h-screen">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 py-10">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-3 leading-tight">
               {article.title}
             </h1>
@@ -304,11 +271,7 @@ function ArticlePageInner() {
 
             {notice && <p className="text-xs text-center text-red-500 mb-4">{notice}</p>}
 
-            <div className={`w-full h-56 md:h-72 bg-gradient-to-br from-gray-700 to-gray-500 rounded-2xl mb-8 overflow-hidden flex items-center justify-center ${showPanel ? "" : "mt-6"}`}>
-              <span className="text-white/30 text-lg font-medium">Article Hero Image</span>
-            </div>
-
-            <div className="text-sm text-gray-700 leading-loose space-y-5">
+            <div className="mt-8 text-sm text-gray-700 leading-loose space-y-5">
               {bodyParagraphs.map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>
               ))}
@@ -372,10 +335,9 @@ function ArticlePageInner() {
                 <p className="text-center text-gray-400 text-sm py-8">No comments yet.</p>
               )}
             </div>
-          </div>
-        </main>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }
 

@@ -55,13 +55,13 @@ const PROFILE_HREF: Record<DashRole, string> = {
   "subject-expert": "/dashboard/subject-expert/profile",
 };
 
-interface Props { collapsed: boolean; onToggle: () => void; }
+interface Props { collapsed: boolean; onToggle: () => void; roleOverride?: DashRole; }
 
-export default function AppSidebar({ collapsed, onToggle }: Props) {
+export default function AppSidebar({ collapsed, onToggle, roleOverride }: Props) {
   const pathname  = usePathname();
   const router    = useRouter();
   const fromPath = dashRoleFromPath(pathname);
-  const role = fromPath ?? rawToDash(getStoredRole());
+  const role = roleOverride ?? fromPath ?? rawToDash(getStoredRole());
 
   const handleLogout = async () => {
     if (hasSupabaseConfig()) {
@@ -84,17 +84,17 @@ export default function AppSidebar({ collapsed, onToggle }: Props) {
 
   if (collapsed) {
     return (
-      <aside className="fixed top-0 left-0 h-screen w-[68px] bg-[#0A0A0A] flex flex-col z-20 rounded-r-2xl max-md:h-[64px] max-md:w-full max-md:flex-row max-md:items-center max-md:rounded-r-none max-md:rounded-b-2xl">
+      <aside className="fixed top-0 left-0 h-screen w-[68px] bg-[#0A0A0A] flex flex-col z-20 rounded-r-2xl max-md:h-[64px] max-md:w-full max-md:flex-row max-md:items-center max-md:rounded-r-none max-md:rounded-b-2xl max-md:overflow-hidden">
         <div className="flex justify-center pt-5 pb-3 cursor-pointer max-md:pt-0 max-md:pb-0 max-md:w-14 max-md:h-full max-md:items-center" onClick={onToggle}>
           <span className="text-white text-xs font-bold tracking-tight select-none">
             S<span className="text-orange-400">.</span>
           </span>
         </div>
-        <div className="no-scrollbar flex-1 overflow-y-auto px-2 flex flex-col gap-0.5 pb-4 max-md:flex-row max-md:items-center max-md:gap-1 max-md:overflow-y-hidden max-md:overflow-x-auto max-md:pb-0 max-md:px-1">
+        <div className="no-scrollbar flex-1 overflow-y-auto px-2 flex flex-col gap-0.5 pb-4 max-md:flex-row max-md:items-center max-md:gap-1 max-md:overflow-y-hidden max-md:overflow-x-auto max-md:overscroll-x-contain max-md:pb-0 max-md:px-1">
           <p className="text-[9px] text-gray-600 font-semibold uppercase tracking-widest px-1 mb-1 max-md:hidden">Menu</p>
           {navItems.map(({ label, href, icon: Icon }) => (
             <Link key={href} href={href} title={label}
-              className={`flex items-center justify-center py-3 rounded-xl transition-all max-md:min-w-10 max-md:px-3 max-md:py-2 ${
+              className={`flex items-center justify-center py-3 rounded-xl transition-all touch-manipulation max-md:min-w-10 max-md:h-10 max-md:px-3 max-md:py-2 ${
                 isActive(href) ? "bg-[#1a1a1a] text-white" : "text-gray-500 hover:text-white hover:bg-white/5"
               }`}>
               <Icon size={18} strokeWidth={1.5} />
@@ -102,11 +102,11 @@ export default function AppSidebar({ collapsed, onToggle }: Props) {
           ))}
           <div className="my-2 border-t border-white/10 max-md:my-0 max-md:h-8 max-md:border-t-0 max-md:border-l" />
           <Link href={profileHref} title="Profile"
-            className="flex items-center justify-center py-3 rounded-xl text-gray-600 hover:text-white hover:bg-white/5 transition-all max-md:min-w-10 max-md:px-3 max-md:py-2">
+            className="flex items-center justify-center py-3 rounded-xl text-gray-600 hover:text-white hover:bg-white/5 transition-all touch-manipulation max-md:min-w-10 max-md:h-10 max-md:px-3 max-md:py-2">
             <User size={16} strokeWidth={1.5} />
           </Link>
           <button onClick={handleLogout} title="Log Out"
-            className="flex items-center justify-center py-3 rounded-xl text-gray-600 hover:text-red-400 hover:bg-white/5 transition-all cursor-pointer max-md:min-w-10 max-md:px-3 max-md:py-2">
+            className="flex items-center justify-center py-3 rounded-xl text-gray-600 hover:text-red-400 hover:bg-white/5 transition-all cursor-pointer touch-manipulation max-md:min-w-10 max-md:h-10 max-md:px-3 max-md:py-2">
             <LogOut size={16} strokeWidth={1.5} />
           </button>
         </div>
