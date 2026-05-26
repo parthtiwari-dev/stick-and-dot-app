@@ -18,15 +18,6 @@ type PortfolioArticle = {
   status: string;
 };
 
-const FALLBACK_ARTICLES: PortfolioArticle[] = [
-  { id:"1", slug:"1", title:"The Silent Revolution in Neural Computing",     author:"You", tags:["#technology","#AI"],      readTime:"8 min",  status:"Published" },
-  { id:"2", slug:"2", title:"How Minimalism Took Over the Design World",     author:"You", tags:["#design","#culture"],     readTime:"6 min",  status:"Published" },
-  { id:"3", slug:"3", title:"The Hidden Economics of Attention",             author:"You", tags:["#finance","#psychology"],  readTime:"10 min", status:"Pending"   },
-  { id:"4", slug:"4", title:"Why Great Ideas Die in Meetings",               author:"You", tags:["#career","#productivity"], readTime:"5 min",  status:"Draft"     },
-  { id:"5", slug:"5", title:"Building Systems That Last",                    author:"You", tags:["#technology","#career"],  readTime:"7 min",  status:"Published" },
-  { id:"6", slug:"6", title:"The Attention Economy and What It Costs Us",    author:"You", tags:["#AI","#society"],         readTime:"9 min",  status:"Pending"   },
-];
-
 const CARDS_PER_PAGE = 6;
 
 const statusBadge = (s: string) => {
@@ -38,13 +29,15 @@ const statusBadge = (s: string) => {
 export default function WriterPortfolioPage() {
   const [activeTag, setActiveTag] = useState("All");
   const [page, setPage] = useState(0);
-  const [articles, setArticles] = useState<PortfolioArticle[]>(FALLBACK_ARTICLES);
+  const [articles, setArticles] = useState<PortfolioArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
     listMyArticles()
       .then(rows => {
-        if (!alive || rows.length === 0) return;
+        if (!alive) return;
         setArticles(rows.map(row => ({
           id: row.id,
           slug: row.slug,
@@ -55,7 +48,12 @@ export default function WriterPortfolioPage() {
           status: STATUS_LABELS[row.status],
         })));
       })
-      .catch(() => {});
+      .catch(err => {
+        if (alive) setError(err instanceof Error ? err.message : "Unable to load your articles.");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => {
       alive = false;
     };
@@ -110,7 +108,9 @@ export default function WriterPortfolioPage() {
         {/* Cards grid — no ghost placeholders */}
         {visible.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-[#6b7280] text-base">No articles found</p>
+            <p className={`${error ? "text-red-500" : "text-[#6b7280]"} text-base`}>
+              {loading ? "Loading articles..." : error || "No articles found"}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

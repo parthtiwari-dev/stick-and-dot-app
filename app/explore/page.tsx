@@ -10,29 +10,19 @@ const CARDS_PER_PAGE = 6;
 
 type ExploreArticle = { id: string; slug: string; title: string; author: string; tags: string[]; readTime: string };
 
-const FALLBACK_ARTICLES: ExploreArticle[] = [
-  { id:"1", slug:"1", title:"The Silent Revolution in Neural Computing",       author:"Aisha R.",  tags:["#technology","#AI"],       readTime:"8 min"  },
-  { id:"2", slug:"2", title:"How Minimalism Took Over the Design World",       author:"Ravi M.",   tags:["#design","#culture"],      readTime:"6 min"  },
-  { id:"3", slug:"3", title:"The Hidden Economics of Attention",               author:"Priya K.",  tags:["#finance","#psychology"],  readTime:"10 min" },
-  { id:"4", slug:"4", title:"Why Great Ideas Die in Meetings",                 author:"Sara T.",   tags:["#career","#productivity"], readTime:"5 min"  },
-  { id:"5", slug:"5", title:"Building Systems That Last",                      author:"Aman G.",   tags:["#technology","#career"],   readTime:"7 min"  },
-  { id:"6", slug:"6", title:"The Attention Economy and What It Costs Us",      author:"Neha S.",   tags:["#AI","#society"],          readTime:"9 min"  },
-  { id:"7", slug:"7", title:"Decoding the Human Genome: 2025 Edition",         author:"Dev P.",    tags:["#medical","#science"],     readTime:"12 min" },
-  { id:"8", slug:"8", title:"Climate Finance: Who's Really Paying",            author:"Meera S.",  tags:["#finance","#science"],     readTime:"8 min"  },
-  { id:"9", slug:"9", title:"The Quiet Death of the Open Office",              author:"Arjun D.",  tags:["#career","#design"],       readTime:"6 min"  },
-];
-
 export default function ExplorePage() {
   const [search, setSearch]       = useState("");
   const [activeTag, setActiveTag] = useState("All");
   const [page, setPage]           = useState(0);
-  const [articles, setArticles] = useState<ExploreArticle[]>(FALLBACK_ARTICLES);
+  const [articles, setArticles] = useState<ExploreArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
     listPublishedArticles()
       .then(rows => {
-        if (!alive || rows.length === 0) return;
+        if (!alive) return;
         setArticles(rows.map(row => ({
           id: row.id,
           slug: row.slug,
@@ -42,7 +32,12 @@ export default function ExplorePage() {
           readTime: formatReadTime(row.read_time_minutes),
         })));
       })
-      .catch(() => {});
+      .catch(err => {
+        if (alive) setError(err instanceof Error ? err.message : "Unable to load articles.");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => {
       alive = false;
     };
@@ -103,7 +98,17 @@ export default function ExplorePage() {
                 href={`/articles/${a.slug}`}
               />
             ))}
-            {visible.length === 0 && (
+            {loading && (
+              <div className="col-span-3 text-center py-20">
+                <p className="text-[#6b7280] text-base">Loading articles...</p>
+              </div>
+            )}
+            {!loading && error && (
+              <div className="col-span-3 text-center py-20">
+                <p className="text-red-500 text-base">{error}</p>
+              </div>
+            )}
+            {!loading && !error && visible.length === 0 && (
               <div className="col-span-3 text-center py-20">
                 <p className="text-[#6b7280] text-base">No articles found</p>
               </div>

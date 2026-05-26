@@ -5,25 +5,24 @@ import Link from "next/link";
 import { Search, Trash2, ArrowRight } from "lucide-react";
 import { listSavedArticles, removeReadingListItem, type SavedArticleRow } from "@/lib/supabase/reading";
 
-const INITIAL: SavedArticleRow[] = [
-  { itemId:"1", articleId:"1", slug:"1", title:"The Silent Revolution in Neural Computing", author:"Arthur Black",  tag:"Technology", progress:90, totalMins:8,  savedDate:"Apr 17" },
-  { itemId:"2", articleId:"2", slug:"2", title:"How Minimalism Took Over the Design World", author:"Shaivya Saini", tag:"Design",     progress:70, totalMins:5,  savedDate:"Apr 15" },
-  { itemId:"3", articleId:"3", slug:"3", title:"The Hidden Economics of Attention",         author:"Jerome Bell",   tag:"Finance",    progress:55, totalMins:12, savedDate:"Apr 13" },
-  { itemId:"4", articleId:"4", slug:"4", title:"Why Slow Reading Is Making a Comeback",     author:"Priya Mehta",   tag:"Culture",    progress:20, totalMins:6,  savedDate:"Apr 10" },
-  { itemId:"5", articleId:"5", slug:"5", title:"Building Products People Actually Love",    author:"Arthur Black",  tag:"Business",   progress:0,  totalMins:9,  savedDate:"Apr 8"  },
-];
-
 export default function ReadingListPage() {
-  const [articles, setArticles] = useState<SavedArticleRow[]>(INITIAL);
+  const [articles, setArticles] = useState<SavedArticleRow[]>([]);
   const [search, setSearch]     = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
     listSavedArticles()
       .then(rows => {
-        if (alive && rows.length) setArticles(rows);
+        if (alive) setArticles(rows);
       })
-      .catch(() => {});
+      .catch(err => {
+        if (alive) setError(err instanceof Error ? err.message : "Unable to load reading list.");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => {
       alive = false;
     };
@@ -118,10 +117,10 @@ export default function ReadingListPage() {
 
           {filtered.length === 0 && (
             <div className="bg-white rounded-2xl p-10 border border-gray-100 text-center">
-              <p className="text-gray-400 text-sm mb-3">
-                {search ? "No saved articles match your search." : "Your reading list is empty."}
+              <p className={`${error ? "text-red-500" : "text-gray-400"} text-sm mb-3`}>
+                {loading ? "Loading saved articles..." : error || (search ? "No saved articles match your search." : "Your reading list is empty.")}
               </p>
-              {!search && (
+              {!loading && !error && !search && (
                 <Link href="/explore">
                   <button className="text-sm font-semibold text-white bg-[#111] px-5 py-2.5 rounded-xl hover:bg-[#333] transition-colors cursor-pointer">
                     Browse Articles

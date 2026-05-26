@@ -1,22 +1,12 @@
 "use client";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { useUser } from "@/components/UserContext";
 import { TrendingUp } from "lucide-react";
+import { formatArticleDate, listMyReviews, listReviewQueueArticles, type ReviewHistoryRow } from "@/lib/supabase/articles";
 
-const QUEUE = [
-  { id:"ART-0041", title:"The Future of EVs in India",        domain:"Technology", writer:"Ravi M.",  submitted:"Apr 10", urgency:"high"   },
-  { id:"ART-0042", title:"Top Finance Hacks for Gen-Z",        domain:"Finance",    writer:"Neha S.",  submitted:"Apr 10", urgency:"medium" },
-  { id:"ART-0043", title:"AI in Healthcare: What Doctors Say", domain:"Medical",    writer:"Priya K.", submitted:"Apr 9",  urgency:"high"   },
-  { id:"ART-0044", title:"Sustainable Fashion on a Budget",    domain:"Business",   writer:"Sara T.",  submitted:"Apr 8",  urgency:"low"    },
-  { id:"ART-0045", title:"Quantum Computing Explained Simply", domain:"Science",    writer:"Aman G.",  submitted:"Apr 7",  urgency:"medium" },
-];
-
-const RECENT = [
-  { id:"ART-0038", title:"Climate Policy 2025",        decision:"Approved",          score:4.2, date:"Apr 9"  },
-  { id:"ART-0039", title:"Crypto Regulations in India", decision:"Revision Requested", score:2.8, date:"Apr 8"  },
-  { id:"ART-0040", title:"Mental Health at Work",       decision:"Approved",          score:4.7, date:"Apr 7"  },
-];
+type QueueRow = { id:string; slug:string; title:string; domain:string; writer:string; submitted:string; urgency:string };
 
 const urgencyBadge = (u: string) =>
   u === "high"   ? "bg-red-50 text-red-500 border border-red-100" :
@@ -25,6 +15,39 @@ const urgencyBadge = (u: string) =>
 
 export default function SubjectExpertDashboard() {
   const { userName } = useUser();
+  const [queue, setQueue] = useState<QueueRow[]>([]);
+  const [recent, setRecent] = useState<ReviewHistoryRow[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([listReviewQueueArticles(), listMyReviews(6)])
+      .then(([queueRows, reviewRows]) => {
+        if (!alive) return;
+        setQueue(queueRows
+          .filter(row => row.status !== "published")
+          .slice(0, 5)
+          .map(row => ({
+            id: row.id.slice(0, 8).toUpperCase(),
+            slug: row.slug,
+            title: row.title,
+            domain: row.domain_name,
+            writer: row.author_name,
+            submitted: formatArticleDate(row.submitted_at ?? row.updated_at),
+            urgency: row.status === "submitted" ? "high" : row.status === "revision_requested" ? "medium" : "low",
+          })));
+        setRecent(reviewRows);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const approved = recent.filter(row => row.decision === "approved").length;
+  const avgScore = recent.length
+    ? (recent.reduce((sum, row) => sum + row.average_score, 0) / recent.length).toFixed(1)
+    : "0.0";
+
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-4 md:p-6 min-h-screen">
@@ -39,9 +62,9 @@ export default function SubjectExpertDashboard() {
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
           {[
-            { label:"Reviews Done",       value:"22",      icon:"✅", change:"+18%",   up:true },
-            { label:"Avg Accuracy Score", value:"4.3 / 5", icon:"🎯", change:"+0.4",   up:true },
-            { label:"Payment Received",   value:"₹9,200",  icon:"🪙", change:"+22.1%", up:true },
+            { label:"Reviews Done",       value:String(recent.length), icon:"✅", change:`${approved} approved`, up:true },
+            { label:"Avg Accuracy Score", value:`${avgScore} / 5`, icon:"🎯", change:"From submitted reviews", up:true },
+            { label:"Payment Received",   value:"Metadata only", icon:"🪙", change:"Gateway later", up:true },
           ].map(({ label, value, icon, change, up }) => (
             <div key={label} className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-4">
               <div className="text-3xl">{icon}</div>
@@ -78,7 +101,7 @@ export default function SubjectExpertDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {QUEUE.map(a => (
+                {queue.map(a => (
                   <tr key={a.id} className="border-b border-gray-50 last:border-0">
                     <td className="py-3">
                       <p className="text-sm text-gray-800 font-medium">{a.title}</p>
@@ -93,14 +116,17 @@ export default function SubjectExpertDashboard() {
                       </span>
                     </td>
                     <td className="py-3">
-                      <button className="text-xs text-gray-500 hover:text-gray-900 underline cursor-pointer transition-colors">
+                      <Link href={`/articles/${a.slug}`} className="text-xs text-gray-500 hover:text-gray-900 underline cursor-pointer transition-colors">
                         Review
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {queue.length === 0 && (
+              <p className="text-center text-gray-400 text-sm py-8">No pending articles in your domains.</p>
+            )}
           </div>
         </div>
 
@@ -117,27 +143,30 @@ export default function SubjectExpertDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {RECENT.map(r => (
+                {recent.map(r => (
                   <tr key={r.id} className="border-b border-gray-50 last:border-0">
                     <td className="py-3">
-                      <p className="text-sm text-gray-800 font-medium">{r.title}</p>
-                      <p className="text-xs text-gray-400">{r.id}</p>
+                      <p className="text-sm text-gray-800 font-medium">{r.article_title}</p>
+                      <p className="text-xs text-gray-400">{r.article_id.slice(0, 8).toUpperCase()}</p>
                     </td>
                     <td className="py-3">
                       <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                        r.decision === "Approved"
+                        r.decision === "approved"
                           ? "bg-green-50 text-green-600 border border-green-100"
                           : "bg-orange-50 text-orange-500 border border-orange-100"
                       }`}>
-                        {r.decision}
+                        {r.decision === "approved" ? "Approved" : "Revision Requested"}
                       </span>
                     </td>
-                    <td className="py-3 text-sm text-gray-700 font-semibold">{r.score} / 5</td>
-                    <td className="py-3 text-xs text-gray-500">{r.date}</td>
+                    <td className="py-3 text-sm text-gray-700 font-semibold">{r.average_score.toFixed(1)} / 5</td>
+                    <td className="py-3 text-xs text-gray-500">{formatArticleDate(r.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {recent.length === 0 && (
+              <p className="text-center text-gray-400 text-sm py-8">Submitted reviews will appear here.</p>
+            )}
           </div>
         </div>
 

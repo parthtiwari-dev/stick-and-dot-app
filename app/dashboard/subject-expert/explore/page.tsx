@@ -18,14 +18,6 @@ type ReviewArticle = {
   urgency: string;
 };
 
-const FALLBACK_ARTICLES: ReviewArticle[] = [
-  { id:"ART-0041", slug:"ART-0041", title:"The Future of EVs in India",               domain:"Technology", writer:"Ravi M.",   submitted:"Apr 10", status:"pending",   urgency:"high"   },
-  { id:"ART-0045", slug:"ART-0045", title:"Quantum Computing Explained Simply",        domain:"Technology", writer:"Aman G.",   submitted:"Apr 7",  status:"pending",   urgency:"medium" },
-  { id:"ART-0038", slug:"ART-0038", title:"The Silent Revolution in Neural Computing", domain:"Technology", writer:"Aisha R.",  submitted:"Apr 5",  status:"published", urgency:"low"    },
-  { id:"ART-0036", slug:"ART-0036", title:"AI in Everyday Life",                       domain:"Technology", writer:"Dev P.",    submitted:"Apr 2",  status:"published", urgency:"low"    },
-  { id:"ART-0050", slug:"ART-0050", title:"5G and Its Real-World Impact",              domain:"Technology", writer:"Meera S.",  submitted:"Mar 30", status:"pending",   urgency:"high"   },
-];
-
 const urgencyPill = (u: string) =>
   u === "high"   ? "bg-[#0a0a0a] text-white"     :
   u === "medium" ? "bg-[#f3f4f6] text-[#374151]" :
@@ -42,8 +34,10 @@ export default function SMEExplorePage() {
   const [search, setSearch]             = useState("");
   const [activeStatus, setActiveStatus] = useState<"all" | "pending" | "published">("all");
   const [visibleCount, setVisibleCount] = useState(CARDS_PER_LOAD);
-  const [articles, setArticles] = useState<ReviewArticle[]>(FALLBACK_ARTICLES);
+  const [articles, setArticles] = useState<ReviewArticle[]>([]);
   const [domainLabel, setDomainLabel] = useState("Technology");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -58,7 +52,7 @@ export default function SMEExplorePage() {
 
     listReviewQueueArticles()
       .then(rows => {
-        if (!alive || rows.length === 0) return;
+        if (!alive) return;
         setArticles(rows.map(row => ({
           id: row.id.slice(0, 8).toUpperCase(),
           slug: row.slug,
@@ -70,7 +64,12 @@ export default function SMEExplorePage() {
           urgency: row.status === "submitted" ? "high" : row.status === "revision_requested" ? "medium" : "low",
         })));
       })
-      .catch(() => {});
+      .catch(err => {
+        if (alive) setError(err instanceof Error ? err.message : "Unable to load review queue.");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
 
     return () => {
       alive = false;
@@ -163,7 +162,9 @@ export default function SMEExplorePage() {
         {/* Article cards grid — no ghost placeholders */}
         {filtered.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-[#6b7280] text-base">No articles found</p>
+            <p className={`${error ? "text-red-500" : "text-[#6b7280]"} text-base`}>
+              {loading ? "Loading review queue..." : error || "No articles found"}
+            </p>
           </div>
         ) : (
           <>

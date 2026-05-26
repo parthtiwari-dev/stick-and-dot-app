@@ -1,10 +1,9 @@
 import { createClient } from "./client";
-import { normalizeDomain } from "./domains";
 import { getCurrentProfile } from "./profile";
+import { normalizeSmeReviewMode, type SmeReviewMode } from "@/lib/env";
 
 export type ArticleStatus = "draft" | "submitted" | "in_review" | "revision_requested" | "published" | "archived";
 export type ReviewDecision = "approved" | "revision_requested";
-export type SmeReviewMode = "before_publish" | "commissions_only" | "optional";
 
 export interface ArticleRecord {
   id: string;
@@ -53,6 +52,21 @@ export interface ArticleComment {
   author_name: string;
 }
 
+export interface ArticleCommentWithArticle extends ArticleComment {
+  article_title: string;
+}
+
+export interface ReviewHistoryRow {
+  id: string;
+  article_id: string;
+  article_slug: string;
+  article_title: string;
+  article_domain: string;
+  decision: ReviewDecision;
+  average_score: number;
+  created_at: string;
+}
+
 export const STATUS_LABELS: Record<ArticleStatus, string> = {
   draft: "Draft",
   submitted: "Pending",
@@ -62,11 +76,8 @@ export const STATUS_LABELS: Record<ArticleStatus, string> = {
   archived: "Archived",
 };
 
-const VALID_REVIEW_MODES: SmeReviewMode[] = ["before_publish", "commissions_only", "optional"];
-
 export function getSmeReviewMode(): SmeReviewMode {
-  const value = process.env.NEXT_PUBLIC_SME_REVIEW_MODE ?? "before_publish";
-  return VALID_REVIEW_MODES.includes(value as SmeReviewMode) ? (value as SmeReviewMode) : "before_publish";
+  return normalizeSmeReviewMode(process.env.NEXT_PUBLIC_SME_REVIEW_MODE);
 }
 
 export function getSubmitStatus(commissionId?: string | null): ArticleStatus {
@@ -95,10 +106,6 @@ export function formatReadTime(minutes: number | null | undefined) {
 export function formatArticleDate(date: string | null | undefined) {
   if (!date) return "";
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(date));
-}
-
-function firstParagraph(text: string) {
-  return text.replace(/\s+/g, " ").trim().slice(0, 180);
 }
 
 async function getPublicProfiles(ids: string[]) {
@@ -199,43 +206,18 @@ export async function saveArticle(input: {
   commissionId?: string | null;
   action: "draft" | "submit";
 }) {
-  const supabase = createClient();
-  const { user, profile } = await getCurrentProfile();
-  if (!user) throw new Error("You must be signed in to save an article.");
+  const response = await fetch("/api/articles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 
-  const wordCount = countWords(input.body);
-  const status = input.action === "draft" ? "draft" : getSubmitStatus(input.commissionId);
-  const title = input.title.trim() || "Untitled Article";
-  const now = new Date().toISOString();
-  const domain = normalizeDomain(
-    input.domain ??
-      profile?.expertise_domains?.[0] ??
-      profile?.domain ??
-      input.tags[0]?.replace(/^#/, "")
-  );
+  const payload = await response.json().catch(() => ({})) as { article?: ArticleRecord; error?: string };
+  if (!response.ok || !payload.article) {
+    throw new Error(payload.error ?? "Unable to save article.");
+  }
 
-  const { data, error } = await supabase
-    .from("articles")
-    .insert({
-      author_id: user.id,
-      commission_id: input.commissionId ?? null,
-      domain_name: domain,
-      title,
-      slug: `${slugify(title)}-${Date.now().toString(36)}`,
-      excerpt: firstParagraph(input.body),
-      body: input.body,
-      tags: input.tags.length ? input.tags : [`#${domain}`],
-      status,
-      word_count: wordCount,
-      read_time_minutes: Math.max(1, Math.ceil(wordCount / 200)),
-      submitted_at: status === "draft" ? null : now,
-      published_at: status === "published" ? now : null,
-    })
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data as ArticleRecord;
+  return payload.article;
 }
 
 export async function submitReview(input: {
@@ -245,28 +227,18 @@ export async function submitReview(input: {
   summary?: string;
   feedback?: string[];
 }) {
-  const supabase = createClient();
-  const { user } = await getCurrentProfile();
-  if (!user) throw new Error("You must be signed in to submit a review.");
+  const response = await fetch(`/api/articles/${input.articleId}/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 
-  const { data, error } = await supabase
-    .from("article_reviews")
-    .upsert(
-      {
-        article_id: input.articleId,
-        sme_id: user.id,
-        decision: input.decision ?? "approved",
-        dimension_ratings: input.ratings,
-        summary: input.summary ?? null,
-        feedback: input.feedback ?? [],
-      },
-      { onConflict: "article_id,sme_id" }
-    )
-    .select("*")
-    .single();
+  const payload = await response.json().catch(() => ({})) as { review?: unknown; error?: string };
+  if (!response.ok) {
+    throw new Error(payload.error ?? "Unable to submit review.");
+  }
 
-  if (error) throw new Error(error.message);
-  return data;
+  return payload.review;
 }
 
 export async function listArticleComments(articleId: string) {
@@ -288,28 +260,111 @@ export async function listArticleComments(articleId: string) {
   }));
 }
 
+export async function listCommentsForMyArticles(limit = 20) {
+  const supabase = createClient();
+  const { user } = await getCurrentProfile();
+  if (!user) return [];
+
+  const { data: articleRows, error: articleError } = await supabase
+    .from("articles")
+    .select("id,title")
+    .eq("author_id", user.id);
+
+  if (articleError) throw new Error(articleError.message);
+
+  const articles = (articleRows ?? []) as Array<{ id: string; title: string }>;
+  if (articles.length === 0) return [];
+
+  const articleById = new Map(articles.map(article => [article.id, article.title]));
+  const { data, error } = await supabase
+    .from("article_comments")
+    .select("*")
+    .in("article_id", articles.map(article => article.id))
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+
+  const rows = (data ?? []) as Omit<ArticleComment, "author_name">[];
+  const profiles = await getPublicProfiles(rows.map(row => row.user_id));
+
+  return rows.map(row => ({
+    ...row,
+    author_name: profiles.get(row.user_id)?.name ?? "Reader",
+    article_title: articleById.get(row.article_id) ?? "Article",
+  })) satisfies ArticleCommentWithArticle[];
+}
+
+export async function listMyReviews(limit = 30) {
+  const supabase = createClient();
+  const { user } = await getCurrentProfile();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("article_reviews")
+    .select("*")
+    .eq("sme_id", user.id)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+
+  const reviews = (data ?? []) as Array<{
+    id: string;
+    article_id: string;
+    decision: ReviewDecision;
+    dimension_ratings: Record<string, number>;
+    created_at: string;
+  }>;
+  if (reviews.length === 0) return [];
+
+  const { data: articles, error: articleError } = await supabase
+    .from("articles")
+    .select("id,slug,title,domain_name")
+    .in("id", reviews.map(review => review.article_id));
+
+  if (articleError) throw new Error(articleError.message);
+
+  const articleById = new Map(
+    ((articles ?? []) as Array<{ id: string; slug: string; title: string; domain_name: string }>)
+      .map(article => [article.id, article])
+  );
+
+  return reviews.map(review => {
+    const ratings = Object.values(review.dimension_ratings ?? {});
+    const average = ratings.length
+      ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+      : 0;
+    const article = articleById.get(review.article_id);
+    return {
+      id: review.id,
+      article_id: review.article_id,
+      article_slug: article?.slug ?? review.article_id,
+      article_title: article?.title ?? "Article",
+      article_domain: article?.domain_name ?? "Other",
+      decision: review.decision,
+      average_score: average,
+      created_at: review.created_at,
+    };
+  }) satisfies ReviewHistoryRow[];
+}
+
 export async function addArticleComment(input: {
   articleId: string;
   body: string;
   qualityRating?: number | null;
   attachmentPath?: string | null;
 }) {
-  const supabase = createClient();
-  const { user } = await getCurrentProfile();
-  if (!user) throw new Error("You must be signed in to comment.");
+  const response = await fetch(`/api/articles/${input.articleId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 
-  const { data, error } = await supabase
-    .from("article_comments")
-    .insert({
-      article_id: input.articleId,
-      user_id: user.id,
-      body: input.body,
-      quality_rating: input.qualityRating ?? null,
-      attachment_path: input.attachmentPath ?? null,
-    })
-    .select("*")
-    .single();
+  const payload = await response.json().catch(() => ({})) as { comment?: unknown; error?: string };
+  if (!response.ok) {
+    throw new Error(payload.error ?? "Unable to add comment.");
+  }
 
-  if (error) throw new Error(error.message);
-  return data;
+  return payload.comment;
 }

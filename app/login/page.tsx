@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { type RawRole, RAW_ROLES, dashRootPath } from "@/lib/roles";
+import { isEnvEnabled } from "@/lib/env";
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentProfile, upsertCurrentProfile } from "@/lib/supabase/profile";
 
@@ -22,7 +23,7 @@ function Inner() {
   const [devAccounts, setDevAccounts] = useState<DevAccount[]>([]);
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED !== "true") return;
+    if (!isEnvEnabled(process.env.NEXT_PUBLIC_DEV_AUTH_ENABLED)) return;
 
     fetch("/api/dev-auth/accounts")
       .then(res => res.json())

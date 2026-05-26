@@ -1,16 +1,41 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { formatMoney, listMyCommissions } from "@/lib/supabase/commissions";
 
-const TOP_ARTICLES = [
-  { rank:1, title:"The Future of EVs in India",         views:"18.4K", rating:4.8 },
-  { rank:2, title:"Top 10 Finance Hacks for Gen-Z",     views:"11.2K", rating:4.5 },
-  { rank:3, title:"AI in Healthcare: What Doctors Say", views:"9.7K",  rating:4.7 },
-];
+type BusinessArticle = { rank:number; title:string; views:string; rating:number };
 
 export default function BusinessDashboard() {
   const { userName } = useUser();
+  const [stats, setStats] = useState({ wordsOrdered: 0, wordsPending: 0, paymentDone: 0 });
+  const [topArticles, setTopArticles] = useState<BusinessArticle[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    listMyCommissions()
+      .then(rows => {
+        if (!alive) return;
+        const pending = rows.filter(row => !["delivered", "completed", "cancelled"].includes(row.status));
+        setStats({
+          wordsOrdered: rows.reduce((sum, row) => sum + (row.word_count ?? 0), 0),
+          wordsPending: pending.reduce((sum, row) => sum + (row.word_count ?? 0), 0),
+          paymentDone: rows.reduce((sum, row) => sum + (row.payment_amount ?? 0), 0),
+        });
+        setTopArticles(rows.slice(0, 3).map((row, index) => ({
+          rank: index + 1,
+          title: row.topic,
+          views: row.status,
+          rating: row.assigned_writer_id ? 4.8 : 0,
+        })));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-6 min-h-screen">
@@ -25,9 +50,9 @@ export default function BusinessDashboard() {
         {/* Stat Cards — Words Ordered / Words Pending / Payment Done */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 mb-4">
           {[
-            { label:"Words Ordered",         value:"84,200",  icon:"📋", change:"+22.4%", up:true  },
-            { label:"Words Pending Delivery", value:"12,400",  icon:"⏳", change:"-8.3%",  up:false },
-            { label:"Payment Done",           value:"₹62,500", icon:"🪙", change:"+31.2%", up:true  },
+            { label:"Words Ordered", value:stats.wordsOrdered.toLocaleString("en-IN"), icon:"📋", change:"All commissions", up:true },
+            { label:"Words Pending Delivery", value:stats.wordsPending.toLocaleString("en-IN"), icon:"⏳", change:"Open work", up:false },
+            { label:"Payment Done", value:formatMoney(stats.paymentDone), icon:"🪙", change:"Metadata only", up:true },
           ].map(({ label, value, icon, change, up }) => (
             <div key={label} className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-4">
               <div className="text-3xl">{icon}</div>
@@ -50,20 +75,23 @@ export default function BusinessDashboard() {
               <p className="font-semibold text-gray-900 text-sm">Top Performing Articles</p>
               <button className="text-xs text-gray-400 hover:text-gray-700 cursor-pointer">Details</button>
             </div>
-            {TOP_ARTICLES.map(a => (
+            {topArticles.map(a => (
               <div key={a.rank} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-bold text-gray-400">#{a.rank}</span>
                   <div>
                     <p className="text-sm text-gray-800 font-medium leading-tight line-clamp-2">{a.title}</p>
-                    <p className="text-xs text-gray-400">{a.views} views</p>
+                    <p className="text-xs text-gray-400">{a.views}</p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <span className="text-xs font-semibold text-gray-700">⭐ {a.rating}</span>
+                  <span className="text-xs font-semibold text-gray-700">★ {a.rating}</span>
                 </div>
               </div>
             ))}
+            {topArticles.length === 0 && (
+              <p className="text-sm text-gray-400 py-8 text-center">Posted commissions will appear here.</p>
+            )}
           </div>
 
           {/* Traffic / Engagement Graph */}

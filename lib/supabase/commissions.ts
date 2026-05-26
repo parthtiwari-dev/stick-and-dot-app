@@ -1,5 +1,4 @@
 import { createClient } from "./client";
-import { normalizeDomain } from "./domains";
 import { getCurrentProfile, type ProfileRecord } from "./profile";
 
 export type CommissionStatus =
@@ -62,15 +61,6 @@ export const COMMISSION_STATUS_LABELS: Record<CommissionStatus, string> = {
   cancelled: "Cancelled",
 };
 
-function parsePayment(value: string) {
-  const amount = Number(value.replace(/[^0-9.]/g, ""));
-  const currency = value.includes("$") ? "USD" : "INR";
-  return {
-    amount: Number.isFinite(amount) && amount > 0 ? amount : null,
-    currency,
-  };
-}
-
 export function formatMoney(amount: number | null, currency = "INR") {
   if (!amount) return "TBD";
   const prefix = currency === "USD" ? "$" : "INR ";
@@ -112,31 +102,18 @@ export async function createCommission(input: {
   payment: string;
   instructions: string[];
 }) {
-  const supabase = createClient();
-  const { user } = await getCurrentProfile();
-  if (!user) throw new Error("You must be signed in to post a commission.");
+  const response = await fetch("/api/commissions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 
-  const payment = parsePayment(input.payment);
-  const wordCount = Number(input.wordCount);
+  const payload = await response.json().catch(() => ({})) as { commission?: CommissionRecord; error?: string };
+  if (!response.ok || !payload.commission) {
+    throw new Error(payload.error ?? "Unable to post commission.");
+  }
 
-  const { data, error } = await supabase
-    .from("commissions")
-    .insert({
-      business_id: user.id,
-      topic: input.topic.trim(),
-      domain_name: normalizeDomain(input.domain),
-      due_date: input.dueDate || null,
-      word_count: Number.isFinite(wordCount) && wordCount > 0 ? wordCount : null,
-      payment_amount: payment.amount,
-      payment_currency: payment.currency,
-      instructions: input.instructions.map(item => item.trim()).filter(Boolean),
-      status: "open",
-    })
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data as CommissionRecord;
+  return payload.commission;
 }
 
 export async function listMyCommissions() {
@@ -168,69 +145,38 @@ export async function listOpenCommissions() {
 }
 
 export async function applyToCommission(commissionId: string) {
-  const supabase = createClient();
-  const { user } = await getCurrentProfile();
-  if (!user) throw new Error("You must be signed in to apply.");
-
-  const { data, error } = await supabase
-    .from("commission_applications")
-    .upsert(
-      {
-        commission_id: commissionId,
-        writer_id: user.id,
-        status: "applied",
-      },
-      { onConflict: "commission_id,writer_id" }
-    )
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+  const response = await fetch(`/api/commissions/${commissionId}/applications`, { method: "POST" });
+  const payload = await response.json().catch(() => ({})) as { application?: unknown; error?: string };
+  if (!response.ok) {
+    throw new Error(payload.error ?? "Unable to apply.");
+  }
+  return payload.application;
 }
 
 export async function assignCommissionToWriter(commissionId: string, writerId: string) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("commissions")
-    .update({
-      assigned_writer_id: writerId,
-      status: "assigned",
-      assignment_type: "direct",
-      assigned_at: new Date().toISOString(),
-    })
-    .eq("id", commissionId)
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data as CommissionRecord;
+  const response = await fetch(`/api/commissions/${commissionId}/assign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ writerId }),
+  });
+  const payload = await response.json().catch(() => ({})) as { commission?: CommissionRecord; error?: string };
+  if (!response.ok || !payload.commission) {
+    throw new Error(payload.error ?? "Unable to assign commission.");
+  }
+  return payload.commission;
 }
 
 export async function acceptCommissionApplication(applicationId: string, commissionId: string, writerId: string) {
-  const supabase = createClient();
-
-  const { error: applicationError } = await supabase
-    .from("commission_applications")
-    .update({ status: "accepted" })
-    .eq("id", applicationId);
-
-  if (applicationError) throw new Error(applicationError.message);
-
-  const { data, error } = await supabase
-    .from("commissions")
-    .update({
-      assigned_writer_id: writerId,
-      status: "assigned",
-      assignment_type: "application",
-      assigned_at: new Date().toISOString(),
-    })
-    .eq("id", commissionId)
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data as CommissionRecord;
+  const response = await fetch(`/api/commission-applications/${applicationId}/accept`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ commissionId, writerId }),
+  });
+  const payload = await response.json().catch(() => ({})) as { commission?: CommissionRecord; error?: string };
+  if (!response.ok || !payload.commission) {
+    throw new Error(payload.error ?? "Unable to accept application.");
+  }
+  return payload.commission;
 }
 
 export async function listWriterDirectory() {

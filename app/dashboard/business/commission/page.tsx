@@ -9,13 +9,6 @@ const DOMAINS = ["Technology","Finance","Medical / Health","Law","Science","Busi
 
 type ActiveOrder = { topic:string; writer:string; status:string; deadline:string; payment:string; statusColor:string };
 
-const ACTIVE_ORDERS: ActiveOrder[] = [
-  { topic:"The Future of EVs in India",         writer:"Ravi M.",    status:"In Progress",       deadline:"Apr 20", payment:"₹4,500", statusColor:"text-blue-500"   },
-  { topic:"Top 10 Finance Hacks for Gen-Z",     writer:"—",          status:"Open",              deadline:"Apr 24", payment:"₹3,200", statusColor:"text-gray-400"   },
-  { topic:"AI in Healthcare: What Doctors Say", writer:"Priya K.",   status:"Under SME Review",  deadline:"Apr 30", payment:"₹6,000", statusColor:"text-orange-500" },
-  { topic:"Sustainable Fashion on a Budget",    writer:"Sara T.",    status:"Delivered",         deadline:"May 5",  payment:"₹2,800", statusColor:"text-green-500"  },
-];
-
 interface Instruction { id: number; value: string; }
 
 export default function BusinessCommission() {
@@ -25,15 +18,16 @@ export default function BusinessCommission() {
   const [wordCount, setWordCount] = useState("");
   const [payment, setPayment]   = useState("");
   const [instructions, setInstructions] = useState<Instruction[]>([{ id: 1, value: "" }]);
-  const [orders, setOrders] = useState<ActiveOrder[]>(ACTIVE_ORDERS);
+  const [orders, setOrders] = useState<ActiveOrder[]>([]);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
     listMyCommissions()
       .then(rows => {
-        if (!alive || rows.length === 0) return;
+        if (!alive) return;
         setOrders(rows.map(row => ({
           topic: row.topic,
           writer: row.writer_name,
@@ -47,7 +41,12 @@ export default function BusinessCommission() {
             "text-blue-500",
         })));
       })
-      .catch(() => {});
+      .catch(err => {
+        if (alive) setNotice(err instanceof Error ? err.message : "Unable to load active orders.");
+      })
+      .finally(() => {
+        if (alive) setOrdersLoading(false);
+      });
     return () => {
       alive = false;
     };
@@ -198,6 +197,11 @@ export default function BusinessCommission() {
                 ))}
               </tbody>
             </table>
+            {(ordersLoading || orders.length === 0) && (
+              <p className="text-center text-gray-400 text-sm py-8">
+                {ordersLoading ? "Loading orders..." : "No commissions posted yet."}
+              </p>
+            )}
           </div>
         </div>
 

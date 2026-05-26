@@ -1,13 +1,12 @@
 "use client";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import Link from "next/link";
 import { Search, Edit2 } from "lucide-react";
+import { useUser } from "@/components/UserContext";
+import { COMMISSION_STATUS_LABELS, formatMoney, listMyCommissions } from "@/lib/supabase/commissions";
 
-const ACTIVE_ORDERS = [
-  { topic: "AI in Healthcare",      writer: "Arthur Black",  status: "In Progress",    budget: "₹4,500" },
-  { topic: "Sustainable Fashion",   writer: "Shaivya Saini", status: "Pending Review", budget: "₹3,200" },
-  { topic: "Crypto Market Analysis",writer: "Jerome Bell",   status: "Completed",      budget: "₹6,000" },
-];
+type ActiveOrder = { topic: string; writer: string; status: string; budget: string };
 
 const STATCLS: Record<string, string> = {
   "In Progress":    "bg-blue-50 text-blue-600",
@@ -16,6 +15,29 @@ const STATCLS: Record<string, string> = {
 };
 
 export default function BusinessProfile() {
+  const { userName } = useUser();
+  const [orders, setOrders] = useState<ActiveOrder[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    listMyCommissions()
+      .then(rows => {
+        if (!alive) return;
+        setOrders(rows.slice(0, 5).map(row => ({
+          topic: row.topic,
+          writer: row.writer_name,
+          status: COMMISSION_STATUS_LABELS[row.status],
+          budget: formatMoney(row.payment_amount, row.payment_currency),
+        })));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const assignedWriters = new Set(orders.map(order => order.writer).filter(writer => writer !== "-")).size;
+
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-4 md:p-6">
@@ -36,13 +58,13 @@ export default function BusinessProfile() {
           <div className="bg-white rounded-2xl p-6 border border-gray-100 w-full lg:w-[280px] flex-shrink-0">
             <div className="flex flex-col items-center mb-5">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-4xl mb-3">🏢</div>
-              <p className="text-gray-900 font-semibold text-base">Tokopedia Inc.</p>
+              <p className="text-gray-900 font-semibold text-base">{userName || "Business Account"}</p>
               <p className="text-gray-500 text-xs mb-1">Technology Company</p>
               <p className="text-gray-400 text-xs">CLT-001</p>
             </div>
 
             <div className="flex justify-around mb-5 py-4 border-y border-gray-100">
-              {[{ label:"Orders", val:"14" }, { label:"Writers", val:"9" }, { label:"Spent", val:"₹54K" }].map(s => (
+              {[{ label:"Orders", val:String(orders.length) }, { label:"Writers", val:String(assignedWriters) }, { label:"Spent", val:"Metadata" }].map(s => (
                 <div key={s.label} className="text-center">
                   <p className="text-gray-900 font-bold text-base">{s.val}</p>
                   <p className="text-gray-400 text-xs">{s.label}</p>
@@ -58,7 +80,7 @@ export default function BusinessProfile() {
 
             <p className="text-xs text-gray-400 mb-1 font-medium">About</p>
             <p className="text-xs text-gray-500 leading-relaxed mb-5">
-              Leading e-commerce platform in Southeast Asia. We commission expert content to educate our merchant and buyer communities.
+              Commission expert content and track writer delivery from one place.
             </p>
 
             <Link href="/dashboard/business/settings">
@@ -75,7 +97,7 @@ export default function BusinessProfile() {
               <Link href="/dashboard/business/writers" className="text-xs text-gray-400 hover:text-gray-700">View All</Link>
             </div>
             <div className="flex flex-col gap-4">
-              {ACTIVE_ORDERS.map((o, i) => (
+              {orders.map((o, i) => (
                 <div key={i} className="flex items-start justify-between py-4 border-b border-gray-50 last:border-0">
                   <div>
                     <p className="text-sm font-medium text-gray-800 mb-1">{o.topic}</p>
@@ -85,11 +107,14 @@ export default function BusinessProfile() {
                     </div>
                   </div>
                   <div className="text-right ml-4 flex-shrink-0">
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full block mb-1 ${STATCLS[o.status]}`}>{o.status}</span>
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full block mb-1 ${STATCLS[o.status] ?? "bg-gray-100 text-gray-600"}`}>{o.status}</span>
                     <p className="text-xs font-semibold text-gray-700">{o.budget}</p>
                   </div>
                 </div>
               ))}
+              {orders.length === 0 && (
+                <p className="text-center text-gray-400 text-sm py-8">Active commissions will appear here.</p>
+              )}
             </div>
             <div className="mt-5">
               <Link href="/dashboard/business/commission">

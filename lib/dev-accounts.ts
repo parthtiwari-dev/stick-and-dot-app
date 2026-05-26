@@ -1,5 +1,6 @@
 import "server-only";
 import { dashRootPath, type RawRole } from "@/lib/roles";
+import { isEnvEnabled } from "@/lib/env";
 
 export type DevAccountKey = "dev-writer" | "writer" | "sme" | "reader" | "business";
 
@@ -55,12 +56,8 @@ const DEV_ACCOUNTS: DevAccountConfig[] = [
   },
 ];
 
-function enabled(value: string | undefined) {
-  return value === "true" || value === "1";
-}
-
 export function isDevAuthEnabled() {
-  return enabled(process.env.DEV_AUTH_ENABLED) && process.env.VERCEL_ENV !== "production";
+  return isEnvEnabled(process.env.DEV_AUTH_ENABLED) && process.env.VERCEL_ENV !== "production";
 }
 
 export function getDevAccount(key: string) {

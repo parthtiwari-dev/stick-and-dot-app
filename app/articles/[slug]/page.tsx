@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
-import { Star, LayoutDashboard, Compass, FilePlus, Settings, FolderOpen, BookOpen, ClipboardList, Users, Upload, CheckCircle } from "lucide-react";
+import { Star, LayoutDashboard, Compass, FilePlus, Settings, FolderOpen, BookOpen, ClipboardList, Users, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { rawToDash } from "@/lib/roles";
@@ -16,19 +16,6 @@ function Stars({ n, size = 12 }: { n: number; size?: number }) {
     </span>
   );
 }
-
-const FALLBACK_COMMENTS = Array(4).fill(null).map((_,i)=>({
-  id: String(i),
-  article_id: "",
-  user_id: "",
-  author_name:"Shaivya S.",
-  created_at:"2023-10-02",
-  quality_rating: i%2===0?5:4,
-  body:"Lorem ipsum dolor Lorem ipsum dolor",
-  attachment_path: null,
-  reward_amount: null,
-  reward_currency: null,
-}));
 
 const WRITER_TOOLS = [
   { label:"Readability", desc:"Check reading ease score" },
@@ -78,38 +65,18 @@ const NAV_BY_ROLE: Record<string, { label:string; href:string; icon:React.Compon
   ],
 };
 
-const FALLBACK_ARTICLE: ArticleWithAuthor = {
-  id: "fallback",
-  author_id: "",
-  commission_id: null,
-  domain_name: "Technology",
-  title: "The World's Most Dangerous Technology Ever Made.",
-  slug: "fallback",
-  excerpt: null,
-  body: "Commodo labore ut nisi laborum amet eu qui magna ullamco ut labore. Aliquip consectetur labore consectetur dolor exercitation est minim quis.\n\nNisi commodo qui pariatur enim sint laborum consequat enim in officia. Officia fugiat incididunt commodo et mollit aliqua non aute.\n\nEst Lorem consectetur minim sit eu eiusmod mollit velit. Consectetur voluptate ex amet id eiusmod laborum irure.",
-  tags: ["#technology", "#tech", "#career"],
-  status: "published",
-  word_count: 600,
-  read_time_minutes: 10,
-  submitted_at: null,
-  published_at: "2019-05-07",
-  created_at: "2019-05-07",
-  updated_at: "2019-05-07",
-  author_name: "Ralph Hawkins",
-  author_domain: "Technology",
-};
-
 function ArticlePageInner() {
   const [comment, setComment] = useState("");
   const [role, setRole] = useState("reader");
   const [userId, setUserId] = useState("");
-  const [article, setArticle] = useState<ArticleWithAuthor>(FALLBACK_ARTICLE);
-  const [comments, setComments] = useState<ArticleComment[]>(FALLBACK_COMMENTS);
+  const [article, setArticle] = useState<ArticleWithAuthor | null>(null);
+  const [comments, setComments] = useState<ArticleComment[]>([]);
   const [activeTool, setActiveTool] = useState<string|null>(null);
   const [activeDim, setActiveDim] = useState<string|null>(null);
   const [dimRatings, setDimRatings] = useState<Record<string,number>>({});
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const params = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
@@ -117,24 +84,39 @@ function ArticlePageInner() {
 
   useEffect(()=>{
     let alive = true;
-    getCurrentProfile()
-      .then(({ user, profile }) => {
-        if (!alive) return;
-        setUserId(user?.id ?? "");
-        setRole(rawToDash(profile?.role ?? "Reader"));
-      })
-      .catch(() => setRole("reader"));
 
-    getArticle(params.slug)
-      .then(row => {
-        if (!alive || !row) return;
-        setArticle(row);
-        return listArticleComments(row.id);
-      })
-      .then(rows => {
-        if (alive && rows?.length) setComments(rows);
-      })
-      .catch(() => {});
+    queueMicrotask(() => {
+      if (!alive) return;
+      setLoading(true);
+      setArticle(null);
+      setComments([]);
+      setNotice("");
+
+      getCurrentProfile()
+        .then(({ user, profile }) => {
+          if (!alive) return;
+          setUserId(user?.id ?? "");
+          setRole(rawToDash(profile?.role ?? "Reader"));
+        })
+        .catch(() => setRole("reader"));
+
+      getArticle(params.slug)
+        .then(row => {
+          if (!alive) return null;
+          if (!row) return null;
+          setArticle(row);
+          return listArticleComments(row.id);
+        })
+        .then(rows => {
+          if (alive && rows) setComments(rows);
+        })
+        .catch(err => {
+          if (alive) setNotice(err instanceof Error ? err.message : "Unable to load article.");
+        })
+        .finally(() => {
+          if (alive) setLoading(false);
+        });
+    });
 
     return () => {
       alive = false;
@@ -142,6 +124,25 @@ function ArticlePageInner() {
   }, [params.slug]);
 
   const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.reader;
+
+  if (loading) {
+    return <div className="min-h-screen bg-white" />;
+  }
+
+  if (!article) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Article not found</h1>
+          <p className="text-sm text-gray-500 mb-5">This article is unavailable or you do not have access to it.</p>
+          <Link href="/explore" className="text-sm font-semibold bg-[#111] text-white px-5 py-2.5 rounded-xl">
+            Explore Articles
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const isWriterOwner = role === "writer" && (isOwnArticleParam || article.author_id === userId);
   const isSME = role === "subject-expert" && article.status !== "draft";
   const showPanel = isWriterOwner || isSME;
@@ -166,12 +167,12 @@ function ArticlePageInner() {
 
   const handleCommentSubmit = async () => {
     const body = comment.trim();
-    if (!body || article.id === "fallback") return;
+    if (!body) return;
     setNotice("");
     try {
       await addArticleComment({ articleId: article.id, body, qualityRating: 5 });
       const rows = await listArticleComments(article.id);
-      setComments(rows.length ? rows : comments);
+      setComments(rows);
       setComment("");
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Unable to add comment.");
@@ -335,8 +336,11 @@ function ArticlePageInner() {
                     onKeyDown={e => { if (e.key === "Enter") void handleCommentSubmit(); }}
                     placeholder="Type your Comment"
                     className="flex-1 text-sm text-gray-700 outline-none placeholder:text-gray-300"/>
-                  <button className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <Upload size={12}/> Upload
+                  <button
+                    onClick={() => void handleCommentSubmit()}
+                    className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
+                    <Send size={12}/> Post
                   </button>
                 </div>
               </div>
@@ -364,6 +368,9 @@ function ArticlePageInner() {
                   ))}
                 </tbody>
               </table>
+              {comments.length === 0 && (
+                <p className="text-center text-gray-400 text-sm py-8">No comments yet.</p>
+              )}
             </div>
           </div>
         </main>

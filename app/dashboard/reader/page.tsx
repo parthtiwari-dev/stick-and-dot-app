@@ -1,19 +1,40 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useUser } from "@/components/UserContext";
 import AppLayout from "@/components/AppLayout";
 import { TrendingUp, TrendingDown } from "lucide-react";
-
-const ARTICLES = [
-  { rank: 1, name: "Article Name", views: "1.2K Views" },
-  { rank: 2, name: "Article Name", views: "980 Views"  },
-  { rank: 3, name: "Article Name", views: "740 Views"  },
-];
+import { listSavedArticles, type SavedArticleRow } from "@/lib/supabase/reading";
 
 const STREAK_DAYS = ["M","T","W","T","F","S","S"];
-const STREAK_READ = [true, true, true, false, true, true, false];
 
 export default function ReaderDashboard() {
   const { userName } = useUser();
+  const [saved, setSaved] = useState<SavedArticleRow[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    listSavedArticles()
+      .then(rows => {
+        if (alive) setSaved(rows);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const completed = saved.filter(article => article.progress === 100).length;
+  const inProgress = saved.filter(article => article.progress > 0 && article.progress < 100).length;
+  const averageProgress = saved.length
+    ? Math.round(saved.reduce((sum, article) => sum + article.progress, 0) / saved.length)
+    : 0;
+  const topArticles = saved.slice(0, 3).map((article, index) => ({
+    rank: index + 1,
+    name: article.title,
+    views: `${article.progress}% read`,
+  }));
+  const streakRead = STREAK_DAYS.map((_, index) => index < Math.min(completed, STREAK_DAYS.length));
+
   return (
     <AppLayout bg="bg-[#F4F4F4]">
       <div className="p-6 min-h-screen">
@@ -28,9 +49,9 @@ export default function ReaderDashboard() {
         {/* Row 1 — Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 mb-4">
           {[
-            { label:"Articles Read",  value:"142",    icon:"📘", change:"+39.89%", up:true  },
-            { label:"Opinions Given", value:"87",     icon:"💬", change:"-5.23%",  up:false },
-            { label:"Reading Streak", value:"5 days", icon:"🔥", change:"+30.03%", up:true  },
+            { label:"Articles Saved", value:String(saved.length), icon:"📘", change:"Reading list", up:true },
+            { label:"Finished", value:String(completed), icon:"💬", change:`${inProgress} in progress`, up:false },
+            { label:"Reading Streak", value:`${completed} days`, icon:"🔥", change:"Based on completions", up:true },
           ].map(({ label, value, icon, change, up }) => (
             <div key={label} className="bg-[#1A1A1A] rounded-2xl p-5 text-white flex items-center gap-4">
               <div className="text-3xl">{icon}</div>
@@ -52,7 +73,7 @@ export default function ReaderDashboard() {
               <p className="font-semibold text-gray-900 text-sm">Your Top Articles</p>
               <button className="text-xs text-gray-400 hover:text-gray-700 cursor-pointer">Details</button>
             </div>
-            {ARTICLES.map(a => (
+            {topArticles.map(a => (
               <div key={a.rank} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-bold text-gray-500">#{a.rank}</span>
@@ -61,6 +82,9 @@ export default function ReaderDashboard() {
                 <p className="text-xs text-gray-400">{a.views}</p>
               </div>
             ))}
+            {topArticles.length === 0 && (
+              <p className="text-sm text-gray-400 py-8 text-center">Saved articles will appear here.</p>
+            )}
           </div>
 
           {/* Understanding Meter */}
@@ -72,12 +96,12 @@ export default function ReaderDashboard() {
                   <circle cx="60" cy="60" r="48" fill="none" stroke="#2a2a2a" strokeWidth="12"/>
                   <circle cx="60" cy="60" r="48" fill="none" stroke="#ffffff" strokeWidth="12"
                     strokeDasharray="180 302" strokeLinecap="round" transform="rotate(-90 60 60)"/>
-                  <text x="60" y="55" textAnchor="middle" fill="white" fontSize="18" fontWeight="700">68%</text>
+                  <text x="60" y="55" textAnchor="middle" fill="white" fontSize="18" fontWeight="700">{averageProgress}%</text>
                   <text x="60" y="70" textAnchor="middle" fill="#9ca3af" fontSize="8">Comprehension</text>
                 </svg>
               </div>
               <div>
-                <p className="text-white text-5xl font-bold mb-1">68%</p>
+                <p className="text-white text-5xl font-bold mb-1">{averageProgress}%</p>
                 <p className="text-gray-400 text-xs leading-relaxed mb-3">
                   Your comprehension score across all reviewed articles this month.
                 </p>
@@ -99,9 +123,9 @@ export default function ReaderDashboard() {
             <div className="flex items-center gap-6">
               <div className="flex flex-col gap-3 flex-1">
                 {[
-                  { label:"Technology", pct:42, color:"#111" },
-                  { label:"Finance",    pct:31, color:"#555" },
-                  { label:"Culture",    pct:27, color:"#999" },
+                  { label:"Finished", pct:completed ? Math.round((completed / Math.max(saved.length, 1)) * 100) : 0, color:"#111" },
+                  { label:"In Progress", pct:inProgress ? Math.round((inProgress / Math.max(saved.length, 1)) * 100) : 0, color:"#555" },
+                  { label:"Unread", pct:Math.max(0, 100 - Math.round(((completed + inProgress) / Math.max(saved.length, 1)) * 100)), color:"#999" },
                 ].map(({ label, pct, color }) => (
                   <div key={label}>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-3">
@@ -125,7 +149,7 @@ export default function ReaderDashboard() {
                   <circle cx="40" cy="40" r="28" fill="none" stroke="#999" strokeWidth="14" strokeDasharray="47 129" strokeDashoffset="-127"/>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold text-gray-700">142</span>
+                  <span className="text-xs font-bold text-gray-700">{saved.length}</span>
                 </div>
               </div>
             </div>
@@ -147,16 +171,16 @@ export default function ReaderDashboard() {
             <div className="flex gap-2 mb-5">
               {STREAK_DAYS.map((d, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                  <div className={`w-full h-8 rounded-lg ${STREAK_READ[i] ? "bg-[#111]" : "bg-gray-100"}`}/>
+                  <div className={`w-full h-8 rounded-lg ${streakRead[i] ? "bg-[#111]" : "bg-gray-100"}`}/>
                   <span className="text-xs text-gray-400">{d}</span>
                 </div>
               ))}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-gray-100 pt-4">
               {[
-                { label:"Articles This Month", value:"14" },
-                { label:"Avg. Daily Reading",  value:"22 min" },
-                { label:"Longest Streak",      value:"12 days" },
+                { label:"Articles Saved", value:String(saved.length) },
+                { label:"Avg. Progress",  value:`${averageProgress}%` },
+                { label:"Finished",      value:String(completed) },
               ].map(({ label, value }) => (
                 <div key={label} className="text-center">
                   <p className="text-xl font-bold text-gray-900">{value}</p>

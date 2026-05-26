@@ -149,18 +149,21 @@ export async function upsertCurrentProfile(input: ProfileInput) {
 
 export async function updateCurrentProfile(input: ProfileInput) {
   const { profile } = await getCurrentProfile();
+  const pick = <K extends keyof ProfileInput>(key: K) =>
+    Object.prototype.hasOwnProperty.call(input, key) ? input[key] : profile?.[key];
+
   return upsertCurrentProfile({
-    role: profile?.role ?? input.role,
-    name: profile?.name ?? input.name,
-    email: profile?.email ?? input.email,
-    mobile: profile?.mobile ?? input.mobile,
-    domain: profile?.domain ?? input.domain,
-    gender: profile?.gender ?? input.gender,
-    dob: profile?.dob ?? input.dob,
-    expertise_domains: input.expertise_domains ?? profile?.expertise_domains ?? undefined,
-    credential_file_path: input.credential_file_path ?? profile?.credential_file_path ?? null,
-    avatar_url: input.avatar_url ?? profile?.avatar_url ?? null,
-    bio: input.bio ?? profile?.bio ?? null,
+    role: pick("role") ?? "Writer",
+    name: pick("name") ?? null,
+    email: pick("email") ?? null,
+    mobile: pick("mobile") ?? null,
+    domain: pick("domain") ?? null,
+    gender: pick("gender") ?? null,
+    dob: pick("dob") ?? null,
+    expertise_domains: pick("expertise_domains") ?? undefined,
+    credential_file_path: pick("credential_file_path") ?? null,
+    avatar_url: pick("avatar_url") ?? null,
+    bio: pick("bio") ?? null,
   });
 }
 

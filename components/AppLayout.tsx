@@ -5,20 +5,25 @@ import AppSidebar from "./AppSidebar";
 export default function AppLayout({ children, bg }: { children: React.ReactNode; bg?: string }) {
   // Start collapsed on mobile, expanded on desktop
   const [collapsed, setCollapsed] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setCollapsed(window.innerWidth < 768);
+    const check = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setCollapsed(mobile);
+    };
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
 
   const pageBg   = bg || "bg-[#F4F4F4]";
-  const sidebarW = collapsed ? "ml-[68px]" : "ml-[200px]";
+  const sidebarW = collapsed ? "ml-[68px] max-md:ml-0 max-md:pt-[64px]" : "ml-[200px]";
 
   return (
     <div className={`flex min-h-screen ${pageBg}`}>
-      <AppSidebar collapsed={collapsed} onToggle={() => setCollapsed(p => !p)}/>
+      <AppSidebar collapsed={collapsed} onToggle={() => { if (!isMobile) setCollapsed(p => !p); }}/>
       <main className={`flex-1 min-h-screen overflow-y-auto transition-all duration-300 ${sidebarW}`}>
         {children}
       </main>

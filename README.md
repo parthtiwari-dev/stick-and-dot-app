@@ -142,6 +142,18 @@ Expected:
 - build passes
 - audit reports `0 vulnerabilities`
 
+Note: if npm warns that your Node version is unsupported, switch to Node `22.9+` or Node `20.17+` before production work. The app can still build locally, but production tooling should use a supported Node/npm pair.
+
+## What Is Backend-Wired Now
+
+- Dashboard role routes are protected in the Next proxy before client pages render.
+- Writer article creation, SME reviews, reader comments, business commissions, commission applications, direct assignment, and application acceptance go through server API routes.
+- The backend-wired pages no longer hide empty or broken Supabase data behind demo fallback rows.
+- Writer, Reader, Business, and SME dashboards now pull their primary stats/lists from Supabase-backed helpers.
+- Mobile dashboard pages keep the existing dark navigation style but use a top rail on small screens instead of squeezing content behind a permanent left sidebar.
+
+The remaining static/demo pages are mostly marketing or secondary profile/settings surfaces. Treat those as lower priority than the role flows below.
+
 ## Manual Test Checklist
 
 ### 1. Auth And Profile
@@ -159,6 +171,7 @@ Expected:
 ### 2. Dev Quick Login
 
 - Set `DEV_AUTH_ENABLED=true` and `NEXT_PUBLIC_DEV_AUTH_ENABLED=true`.
+- Lowercase `true` is recommended. The app accepts common truthy casing, but Vercel/Supabase docs and this README use lowercase.
 - Run `npm run seed:dev`.
 - Open `/login`.
 - Confirm quick-login buttons appear.
@@ -185,6 +198,7 @@ Expected:
 - Open a published article.
 - Switch to `Open Commissions`.
 - Click `Apply` on a commission; the button should change to `Applied`.
+- Visit `/dashboard/business` directly while still logged in as Writer; it should redirect back to `/dashboard/writer`.
 
 ### 4. SME Flow
 
@@ -196,6 +210,7 @@ Expected:
 - Click `Submit Review`.
 - Confirm the review success state appears.
 - Go back to the review queue; approved articles should become published after review.
+- Visit `/dashboard/reader` directly while logged in as SME; it should redirect back to `/dashboard/subject-expert`.
 
 ### 5. Reader Flow
 
@@ -210,6 +225,7 @@ Expected:
 - Confirm the saved article appears.
 - Click Start/Continue/Re-read and confirm it opens the article.
 - Remove a saved article and confirm it disappears.
+- Open a missing article slug such as `/articles/not-real`; it should show the article-not-found state instead of demo article text.
 
 ### 6. Business Flow
 
@@ -222,6 +238,7 @@ Expected:
 - Switch back to Writer and confirm the commission appears under Open Commissions.
 - Apply as Writer.
 - Switch back to Business and confirm the commission status changes from open toward applied/assigned as the flow is expanded.
+- Visit `/dashboard/writer` directly while logged in as Business; it should redirect back to `/dashboard/business`.
 
 ### 7. Review Mode Switch
 
@@ -267,6 +284,7 @@ Do these before shipping:
 - Run `npm run lint`.
 - Run `npm run build`.
 - Run `npm audit`.
+- Confirm the build output shows the API routes under `/api/articles`, `/api/commissions`, and `/api/dev-auth`.
 - Apply `supabase/schema.sql` to production Supabase before Vercel deploy.
 - Configure Vercel env vars.
 - Do not add `SUPABASE_SERVICE_ROLE_KEY` as a public env var.
@@ -274,3 +292,4 @@ Do these before shipping:
 - Configure custom SMTP before real email volume.
 - Configure OAuth providers only after provider callback URLs are ready.
 - Do one full role-by-role seeded test before committing or shipping.
+- Test mobile layouts at roughly `390x844`, tablet at `768x1024`, and desktop at `1440x900`.

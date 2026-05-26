@@ -14,21 +14,6 @@ const TAGS = ["All", "#Technology", "#Finance", "#Medical", "#Science", "#Design
 type ExploreArticle = { id: string; slug: string; title: string; author: string; tags: string[]; readTime: string };
 type ExploreCommission = { id: string; title: string; budget: string; deadline: string; domain: string };
 
-const FALLBACK_ARTICLES: ExploreArticle[] = [
-  { id:"1", slug:"1", title:"The Silent Revolution in Neural Computing",      author:"Aisha R.",  tags:["#technology","#AI"],       readTime:"8 min"  },
-  { id:"2", slug:"2", title:"How Minimalism Took Over the Design World",      author:"Ravi M.",   tags:["#design","#culture"],      readTime:"6 min"  },
-  { id:"3", slug:"3", title:"The Hidden Economics of Attention",              author:"Priya K.",  tags:["#finance","#psychology"],  readTime:"10 min" },
-  { id:"4", slug:"4", title:"Why Great Ideas Die in Meetings",                author:"Sara T.",   tags:["#career","#productivity"], readTime:"5 min"  },
-  { id:"5", slug:"5", title:"Building Systems That Last",                     author:"Aman G.",   tags:["#technology","#career"],   readTime:"7 min"  },
-  { id:"6", slug:"6", title:"The Attention Economy and What It Costs Us",     author:"Neha S.",   tags:["#AI","#society"],          readTime:"9 min"  },
-];
-
-const FALLBACK_COMMISSIONS: ExploreCommission[] = [
-  { id:"c1", title:"3000-word piece on EV Infrastructure in India", budget:"INR 8,000",  deadline:"Apr 30", domain:"Technology" },
-  { id:"c2", title:"Finance Guide for First-Time Investors",        budget:"INR 6,500",  deadline:"May 5",  domain:"Finance"    },
-  { id:"c3", title:"AI in Healthcare: Patient Perspective",         budget:"INR 10,000", deadline:"May 10", domain:"Medical"    },
-];
-
 const CARDS_PER_LOAD = 6;
 
 export default function WriterExplorePage() {
@@ -36,17 +21,19 @@ export default function WriterExplorePage() {
   const [activeTag, setActiveTag]       = useState("All");
   const [search, setSearch]             = useState("");
   const [visibleCount, setVisibleCount] = useState(CARDS_PER_LOAD);
-  const [articles, setArticles] = useState<ExploreArticle[]>(FALLBACK_ARTICLES);
-  const [commissions, setCommissions] = useState<ExploreCommission[]>(FALLBACK_COMMISSIONS);
+  const [articles, setArticles] = useState<ExploreArticle[]>([]);
+  const [commissions, setCommissions] = useState<ExploreCommission[]>([]);
   const [applied, setApplied] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
 
-    listPublishedArticles()
-      .then(rows => {
-        if (!alive || rows.length === 0) return;
-        setArticles(rows.map(row => ({
+    Promise.all([listPublishedArticles(), listOpenCommissions()])
+      .then(([articleRows, commissionRows]) => {
+        if (!alive) return;
+        setArticles(articleRows.map(row => ({
           id: row.id,
           slug: row.slug,
           title: row.title,
@@ -54,13 +41,7 @@ export default function WriterExplorePage() {
           tags: row.tags.length ? row.tags : [`#${row.domain_name}`],
           readTime: formatReadTime(row.read_time_minutes),
         })));
-      })
-      .catch(() => {});
-
-    listOpenCommissions()
-      .then(rows => {
-        if (!alive || rows.length === 0) return;
-        setCommissions(rows.map(row => ({
+        setCommissions(commissionRows.map(row => ({
           id: row.id,
           title: row.topic,
           budget: formatMoney(row.payment_amount, row.payment_currency),
@@ -68,7 +49,12 @@ export default function WriterExplorePage() {
           domain: row.domain_name,
         })));
       })
-      .catch(() => {});
+      .catch(err => {
+        if (alive) setError(err instanceof Error ? err.message : "Unable to load explore data.");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
 
     return () => {
       alive = false;
@@ -154,7 +140,9 @@ export default function WriterExplorePage() {
 
             {filteredArticles.length === 0 ? (
               <div className="text-center py-20">
-                <p className="text-[#6b7280] text-base">No articles found</p>
+                <p className={`${error ? "text-red-500" : "text-[#6b7280]"} text-base`}>
+                  {loading ? "Loading articles..." : error || "No articles found"}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -185,39 +173,47 @@ export default function WriterExplorePage() {
 
         {tab === "Open Commissions" && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {visibleCommissions.map(c => (
-                <div
-                  key={c.id}
-                  className="bg-white border border-[#e5e7eb] rounded-[12px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]
-                             hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] hover:-translate-y-0.5
-                             transition-all duration-200 p-5 flex flex-col min-h-[200px]"
-                >
-                  <span className="self-start text-[10px] bg-[#f3f4f6] text-[#374151] px-2.5 py-1 rounded-full mb-3">
-                    {c.domain}
-                  </span>
+            {visibleCommissions.length === 0 ? (
+              <div className="text-center py-20">
+                <p className={`${error ? "text-red-500" : "text-[#6b7280]"} text-base`}>
+                  {loading ? "Loading commissions..." : error || "No open commissions found"}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {visibleCommissions.map(c => (
+                  <div
+                    key={c.id}
+                    className="bg-white border border-[#e5e7eb] rounded-[12px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]
+                               hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] hover:-translate-y-0.5
+                               transition-all duration-200 p-5 flex flex-col min-h-[200px]"
+                  >
+                    <span className="self-start text-[10px] bg-[#f3f4f6] text-[#374151] px-2.5 py-1 rounded-full mb-3">
+                      {c.domain}
+                    </span>
 
-                  <p className="text-sm font-semibold text-[#0a0a0a] line-clamp-2 flex-1 mb-4">{c.title}</p>
+                    <p className="text-sm font-semibold text-[#0a0a0a] line-clamp-2 flex-1 mb-4">{c.title}</p>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-[#f3f4f6]">
-                    <div>
-                      <p className="text-base font-bold text-[#0a0a0a]">{c.budget}</p>
-                      <p className="text-xs text-[#9ca3af] mt-0.5">Deadline: {c.deadline}</p>
+                    <div className="flex items-center justify-between pt-3 border-t border-[#f3f4f6]">
+                      <div>
+                        <p className="text-base font-bold text-[#0a0a0a]">{c.budget}</p>
+                        <p className="text-xs text-[#9ca3af] mt-0.5">Deadline: {c.deadline}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          void applyToCommission(c.id)
+                            .then(() => setApplied(prev => ({ ...prev, [c.id]: true })))
+                            .catch(() => setApplied(prev => ({ ...prev, [c.id]: false })));
+                        }}
+                        className="bg-[#0a0a0a] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#374151] transition-colors cursor-pointer"
+                      >
+                        {applied[c.id] ? "Applied" : "Apply"}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => {
-                        void applyToCommission(c.id)
-                          .then(() => setApplied(prev => ({ ...prev, [c.id]: true })))
-                          .catch(() => setApplied(prev => ({ ...prev, [c.id]: false })));
-                      }}
-                      className="bg-[#0a0a0a] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#374151] transition-colors cursor-pointer"
-                    >
-                      {applied[c.id] ? "Applied" : "Apply"}
-                    </button>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {hasMoreCommissions && (
               <button
